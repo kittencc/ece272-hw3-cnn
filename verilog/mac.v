@@ -1,5 +1,6 @@
 // Author: Cheryl(Yingqiu) Cao
 // Date: 2022-04-02
+// Updated on: 2022-04-10 : data needs to be signed to compute neg values
 
 module mac
 #(
@@ -11,17 +12,17 @@ module mac
   input logic  rst_n,
   input logic  en,            // en for the entire mac module
   input logic  en_weight,     // en signal for the weight FF
-  input logic  [IFMAP_WIDTH - 1 : 0]  ifmap_in,
-  input logic  [WEIGHT_WIDTH - 1 : 0] weight_in,
-  input logic  [OFMAP_WIDTH - 1 : 0]  accum_in,
-  output logic  [IFMAP_WIDTH - 1 : 0] ifmap_out,
-  output logic  [OFMAP_WIDTH - 1 : 0] accum_out
+  input logic signed  [IFMAP_WIDTH - 1 : 0]  ifmap_in,
+  input logic signed [WEIGHT_WIDTH - 1 : 0] weight_in,
+  input logic signed [OFMAP_WIDTH - 1 : 0]  accum_in,
+  output logic signed [IFMAP_WIDTH - 1 : 0] ifmap_out,
+  output logic signed [OFMAP_WIDTH - 1 : 0] accum_out
 );
 
 // local variables
-logic  [WEIGHT_WIDTH - 1 : 0] weight_q;
-logic [OFMAP_WIDTH - 1 : 0] product;
-logic [OFMAP_WIDTH - 1 : 0] sum_d; 
+logic signed [WEIGHT_WIDTH - 1 : 0] weight_q;
+logic signed [OFMAP_WIDTH - 1 : 0] product;
+logic signed [OFMAP_WIDTH - 1 : 0] sum_d; 
 
 // weight FF
 always @ ( posedge clk ) begin

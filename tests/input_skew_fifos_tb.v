@@ -16,6 +16,8 @@ module input_skew_fifos_tb;
   logic signed [`IFMAP_WIDTH - 1 : 0] d_out_w [`ARRAY_HEIGHT - 1 : 0];
 
   always #10 clk =~clk;
+
+
   input_skew_fifos
   #(
     .IFMAP_WIDTH(`IFMAP_WIDTH),

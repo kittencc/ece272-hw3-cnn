@@ -1,7 +1,7 @@
 // Description: the parameterized mac array
 // Author: Cheryl (Yingqiu) Cao
 // Date: 2022-04-02
-// Updated on: 2022-04-03
+// Updated on: 2022-04-10 : data needs to be signed to compute neg values
 
 
 module mac_array
@@ -23,11 +23,11 @@ module mac_array
 );
 
 // local signals ++
-  logic  [15 : 0] ifmap_in  [IC0 - 1 : 0][OC0 - 1 : 0];
-  logic  [15 : 0] weight_in [IC0 - 1 : 0][OC0 - 1 : 0];
-  logic  [31 : 0] accum_in  [IC0 - 1 : 0][OC0 - 1 : 0];
-  logic  [15 : 0] ifmap_out [IC0 - 1 : 0][OC0 - 1 : 0];
-  logic  [31 : 0] accum_out [IC0 - 1 : 0][OC0 - 1 : 0];
+  logic signed [15 : 0] ifmap_in  [IC0 - 1 : 0][OC0 - 1 : 0];
+  logic signed [15 : 0] weight_in [IC0 - 1 : 0][OC0 - 1 : 0];
+  logic signed [31 : 0] accum_in  [IC0 - 1 : 0][OC0 - 1 : 0];
+  logic signed [15 : 0] ifmap_out [IC0 - 1 : 0][OC0 - 1 : 0];
+  logic signed [31 : 0] accum_out [IC0 - 1 : 0][OC0 - 1 : 0];
 // local signals --
 
 
