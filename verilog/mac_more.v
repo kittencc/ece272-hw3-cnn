@@ -2,6 +2,11 @@
 // weights and ofmap, and the en_weight_shifter module
 // Author: Cheryl (Yingqiu) Cao
 // Date: 2020-04-10
+//
+// updated on: 2022-04-23
+//  - adds accum_out_skew_fifo module
+//  - corrects wire connections for accum_out between mac_array,
+//    skewed_fifo and the output port accum_out_chained_fifo_out
 
 module mac_more
 # (
@@ -147,7 +152,7 @@ accum_in_skew_fifo_inst
 
 
 // wire-up the accum_out skew_fifo
-wrapped_skew_fifo
+accum_out_skew_fifo
 # (
   .IFMAP_WIDTH(32),
   .ARRAY_HEIGHT(OC0)
