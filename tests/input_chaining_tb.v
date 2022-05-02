@@ -1,5 +1,6 @@
 // Author: Cheryl (Yingqiu) Cao
 // Date: 2021-11-13
+// Updated on 2022-04-30; dve => verdi related changes
 
 module input_chaining_tb;
 
@@ -23,16 +24,20 @@ always #10 clk = ~clk;  // clk cycle is 20
 
 
 // wire up the DUT
-input_chaining #(
+input_chaining
+#(
   .IC0(IC0),
   .COUNTER_WID(2)
-) chain_inst (
+) 
+chain_inst 
+(
   .input_dat(input_dat),
   .input_vld(input_vld),
   .clk(clk),
   .rst_n(rst_n),
   .en_input(en_input),
   .input_dat_chained(input_dat_chained),
+  .chaining_last_one(chaining_last_one),
   .done(done),
   .input_rdy(input_rdy)
 );
@@ -81,13 +86,24 @@ end
 
 
 // config vcd display
+// initial begin
+//    $vcdplusfile("dump.vcd");
+//    $vcdplusmemon();
+//    $vcdpluson(0, input_chaining_tb);
+//    #20000000;
+//    $finish(2);
+//  end
+
+
 initial begin
-    $vcdplusfile("dump.vcd");
-    $vcdplusmemon();
-    $vcdpluson(0, input_chaining_tb);
-    #20000000;
-    $finish(2);
-  end
+  $fsdbDumpfile("dump.fsdb");
+  $fsdbDumpvars(0, input_chaining_tb);
+  $fsdbDumpMDA(0, input_chaining_tb);
+//  $fsdbDumpon;
+  #10000;
+//  $fsdbDumpoff;
+  $finish;
+end
 
 
 

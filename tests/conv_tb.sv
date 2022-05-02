@@ -80,6 +80,8 @@ interface conv_if(input bit clk);
     endtask
 endinterface
 
+
+
 class conv_item;
     layer_params_t layer_params;
 
@@ -87,6 +89,9 @@ class conv_item;
     reg [15:0] weights_dat_full [`LAYER_WEIGHTS_SIZE-1:0];
     reg [31:0] ofmap_dat_full [`LAYER_OFMAP_SIZE-1:0];
 endclass;
+
+
+
 
 class driver;
     virtual conv_if vif;
@@ -143,6 +148,8 @@ class driver;
     endtask
 endclass
 
+
+
 class monitor; 
     virtual conv_if vif;
     mailbox scb_mbx; // mailbox connected to scoreboard
@@ -194,6 +201,8 @@ class monitor;
     endtask
 endclass
 
+
+
 class scoreboard;
     mailbox scb_mbx;
 
@@ -204,8 +213,14 @@ class scoreboard;
             conv_item transaction;
             scb_mbx.get(transaction);
             $display("[Scoreboard] Checking transaction...");
-            
+ 
+ // use function "run_conv_gold" to compute the correct ofmap values 
+ // The correct values were saved in "gold_ofmap_dat" variable
+
             run_conv_gold(transaction.ifmap_dat_full, transaction.weights_dat_full, gold_ofmap_dat, transaction.layer_params.ofmap_width, transaction.layer_params.ofmap_height, transaction.layer_params.ifmap_channels, transaction.layer_params.ofmap_channels, transaction.layer_params.filter_size, transaction.layer_params.stride);
+
+// compare ofmap data from the transaction to "gold_ofmap_dat" for
+// correctnes
             
             for(int i = 0; i < `LAYER_OFMAP_SIZE; i+=1) begin
                 if(transaction.ofmap_dat_full[i] != gold_ofmap_dat[i]) begin
@@ -219,6 +234,8 @@ class scoreboard;
         end
     endtask
 endclass
+
+
 
 class env;
     driver d0;
@@ -248,6 +265,9 @@ class env;
     endtask   
 endclass    
 
+
+
+
 class test;
     env e0;
     mailbox drv_mbx;
@@ -272,6 +292,7 @@ class test;
         $display ("T=%0t [Test] Starting stimulus ...", $time);
 
         transaction = new;
+        // change the test data here!!
         $readmemh("data/layer1_ifmap.mem", transaction.ifmap_dat_full);
         $readmemh("data/layer1_weights.mem", transaction.weights_dat_full);
         
@@ -285,6 +306,8 @@ class test;
         drv_mbx.put(transaction);
     endtask
 endclass
+
+
 
 
 module conv_tb;
@@ -324,6 +347,7 @@ module conv_tb;
         t0.e0.vif = _if;
         t0.run();
     end
+
     initial begin
         $vcdplusfile("dump.vcd");
         $vcdplusmemon();

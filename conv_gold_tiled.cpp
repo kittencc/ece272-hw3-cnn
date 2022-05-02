@@ -17,11 +17,12 @@ void conv_gold( int16_t ifmap[(OFMAP_HEIGHT-1)*STRIDE+FILTER_SIZE][(OFMAP_WIDTH-
   int OY1 = OFMAP_HEIGHT/OY0;
   int OX0 = 4;
   int OX1 = OFMAP_WIDTH/OX0;
-  int OC0 = 4; // Make this equal to array width
+  int OC0 = 4; // Make this equal to MAC array width
   int OC1 = OFMAP_CHANNELS/OC0;
-  int IC0 = 4; // Make this equal to array height
+  int IC0 = 4; // Make this equal to MAC array height
   int IC1 = IFMAP_CHANNELS/IC0;
 
+  // initialize ofmap to 0
   OY: for (int oy = 0; oy < OFMAP_HEIGHT; oy++) {
     OX: for (int ox = 0; ox < OFMAP_WIDTH; ox++) {
       OC: for (int oc = 0; oc < OFMAP_CHANNELS; oc++) {

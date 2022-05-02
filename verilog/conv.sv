@@ -40,6 +40,7 @@ module conv
         $readmemh("data/layer1_gold_ofmap.mem", gold_ofmap_mem);
     end
 
+   // ofmap_data directly assigned
     assign ofmap_dat = gold_ofmap_mem[ofmap_idx];
 
     always_ff @(posedge clk, negedge rst_n) begin

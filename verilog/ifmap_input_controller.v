@@ -3,16 +3,14 @@
 // Author: Cheryl (Yingqiu) Cao
 // Date:: 2021-12-28
 // updated on: 2022-01-06
+// updated on: 2022-04-30 : "counter" module related changes
 
 
 module ifmap_input_controller
 # (
   parameter IC0 = 4,
-  parameter COUNTER_WID = 8,             // needs to be large enough to save IC1*IX0*IY0
-  parameter CONFIG_WIDTH = 32,
-  parameter BANK_ADDR_WIDTH = 32,
+  parameter BANK_ADDR_WIDTH = 16,        // width needed to save IC1*IX0*IY0, OY1_OX1
   parameter BUFFER_MEM_DEPTH = 256,     // capacity of the memory, larger than IC1*Ix0*IY0
-  parameter OY1_OX1 = 4*4       // used for the write_bank_counter
 )
 (
   input logic        clk,
@@ -23,8 +21,11 @@ module ifmap_input_controller
   input logic        input_vld,
   output logic       input_rdy,
 
-// for write_addr_gen
-  input logic [CONFIG_WIDTH - 1 : 0] config_data,
+  // for the config parameters
+  input logic [BANK_ADDR_WIDTH - 1 : 0] config_IC1_IY0_IX0,
+  input logic [BANK_ADDR_WIDTH - 1 : 0] config_OY1_OX1,
+
+
 // for the ifmap_double_buffer
   input logic ren,
   input logic [BANK_ADDR_WIDTH - 1 : 0] raddr,
@@ -34,9 +35,9 @@ module ifmap_input_controller
   input logic ready_to_switch,                   // from main FSM
   input logic start_new_write_bank,              // from main FSM
 
-//  output logic one_write_bank_done,             
+//  output logic one_write_bank_done             
   output logic write_bank_ready_to_switch,       // to main_FSM
-  output logic [COUNTER_WID - 1 : 0] write_bank_count
+  output logic [ BANK_ADDR_WIDTH- 1 : 0] write_bank_count
 
 );
 
@@ -65,9 +66,6 @@ logic [16*IC0-1 : 0] wdata;
 logic one_write_bank_done;                // goes high when we finish writing a whole bank's ifmap data to the double buffer
 logic en_write_bank_count;                // control signal to enable the write_bank counter
 
-// for the config parameters
-logic [BANK_ADDR_WIDTH - 1 : 0] config_IC1_IY0_IX0;
-
 // local signals end        
 
 
@@ -78,6 +76,8 @@ assign wdata = input_dat_chained;
 assign this_rst_n = rst_n && rst_n_chaining;        // we can reset only the chaining module but not others by rst_n_chaining
 
 
+
+// config_data is the  concatenation of {IC1*IX0*IY0, OY1_OX}
 
 
 // logic for one_write_bank_done
@@ -108,15 +108,15 @@ end
 //  counts from 0 to (MAX_COUNT - 1)
 counter  
 #(
-  .MAX_COUNT(OY1_OX1+1),
-  .COUNTER_WID(COUNTER_WID)
+  .COUNTER_WID(BANK_ADDR_WIDTH)
 )
 write_bank_counter_inst
 (
   .clk(clk),
   .rst_n(rst_n),
   .en(one_write_bank_done),
-  .count(write_bank_count)
+  .count(write_bank_count),
+  .config_MAX_COUNT(config_OY1_OX1+1)
 );
 
 
@@ -125,7 +125,7 @@ write_bank_counter_inst
 input_chaining 
 #(
  .IC0(IC0),
- .COUNTER_WID(COUNTER_WID)
+ .COUNTER_WID(BANK_ADDR_WIDTH)
 )
 input_chaining_inst
 (
@@ -144,7 +144,6 @@ input_chaining_inst
 // connect input_write_addr_gen module
 input_write_addr_gen 
 #( 
-  .CONFIG_WIDTH(CONFIG_WIDTH),
   .BANK_ADDR_WIDTH(BANK_ADDR_WIDTH)
 ) 
 input_write_addr_gen_inst
@@ -152,7 +151,6 @@ input_write_addr_gen_inst
   .clk(clk),
   .rst_n(rst_n),
   .addr_enable(addr_enable),
-  .config_enable(config_enable),
   .config_data(config_data),
   .addr(waddr),
   .writing_last_data(writing_last_data)

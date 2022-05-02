@@ -3,12 +3,13 @@
 // Author: Cheryl (Yingiuq) Cao
 // Date: 2021-11-13
 // updated on: 2021-12-27
+// updated on: 2022-04-30: changed connections for "counter"
 
 
 module input_chaining
 #(
   parameter IC0 = 4,
-  parameter COUNTER_WID = 4
+  parameter COUNTER_WID = 8
 
 )
 (
@@ -30,6 +31,7 @@ logic                     reading;
 logic                     en_shifter;
 logic                     last_input;
 logic [COUNTER_WID-1 : 0] count;  // monitor the # of read in cyclesi
+logic [COUNTER_WID-1 : 0] config_MAX_COUNT;  // counter counts to config_MAX_COUNT - 1
 
 // signals for the chained FFs
 logic [15 : 0]            Q  [ IC0-1 : 0];    //  output signal Q for the chained FFs
@@ -45,6 +47,9 @@ assign en_shifter = en_input && reading;
 assign last_input = (count == (IC0-1));      // the last reading data ready at the input this cycle
 assign chaining_last_one = reading && last_input;
 
+// set the MAX_COUNTER for the counter
+assign config_MAX_COUNT = IC0;
+
 // done signal goes high when the chained input appear at the output
 always @ (posedge clk) begin
   if (!rst_n)
@@ -57,7 +62,6 @@ end
 // wire up the counter
 counter 
 #(
-  .MAX_COUNT(IC0),
   .COUNTER_WID(COUNTER_WID)
 )
 counter_inst
@@ -65,8 +69,10 @@ counter_inst
   .clk(clk),
   .rst_n(rst_n),
   .en(en_shifter),
-  .count(count)
+  .count(count),
+  .config_MAX_COUNT(config_MAX_COUNT)
 );
+
 
 
 

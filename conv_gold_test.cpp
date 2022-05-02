@@ -1,9 +1,11 @@
+// Updated on 2022-04-30
+
 #include <fstream>
 #include <iostream>
 #include <string>
 
-//#include "conv_gold.cpp"
-#include "conv_gold_tiled.cpp"
+#include "conv_gold.cpp"
+// #include "conv_gold_tiled.cpp"
 
 using namespace std;
 
@@ -14,10 +16,17 @@ template <int OFMAP_HEIGHT,
           int FILTER_SIZE, 
           int STRIDE>
 void run_layer(string layer_name){
+
+    // takes "layer_name" as input, prints it to the screen
     std::cout << "Running: " << layer_name << std::endl;
-    
+
+    // opens ifmap_file
     std::ifstream ifmap_file("data/" + layer_name + "_ifmap.txt", ios::in);
+
+    // declairs ifmap data block
     int16_t ifmap[(OFMAP_HEIGHT-1)*STRIDE+FILTER_SIZE][(OFMAP_WIDTH-1)*STRIDE+FILTER_SIZE][IFMAP_CHANNELS];
+
+    // initialize ifmap data block
     for(int i = 0; i < (OFMAP_HEIGHT-1)*STRIDE+FILTER_SIZE; i++){
         for(int j = 0; j < (OFMAP_WIDTH-1)*STRIDE+FILTER_SIZE; j++){
             for(int k = 0; k < IFMAP_CHANNELS; k++){
@@ -25,10 +34,13 @@ void run_layer(string layer_name){
             }
         }
     }
-    ifmap_file.close();
+
+    ifmap_file.close(); // close ifmap_file
 
     std::ifstream weights_file;
+    // opens weights_file
     weights_file.open("data/" + layer_name + "_weights.txt");
+    // initialize weights data block
     int16_t weights[FILTER_SIZE][FILTER_SIZE][IFMAP_CHANNELS][OFMAP_CHANNELS];
     for(int i = 0; i < FILTER_SIZE; i++){
         for(int j = 0; j < FILTER_SIZE; j++){
@@ -40,9 +52,14 @@ void run_layer(string layer_name){
         }
     }
 
+    // declares ofmap data block
     int32_t ofmap[OFMAP_HEIGHT][OFMAP_WIDTH][OFMAP_CHANNELS];
+
+    // calls "conv_gold.cpp" function to fill ofmap data block
     conv_gold<OFMAP_HEIGHT, OFMAP_WIDTH, OFMAP_CHANNELS, IFMAP_CHANNELS, FILTER_SIZE, STRIDE>(ifmap, weights, ofmap);
 
+    // saves the calculated ofmap data block into "layer_name_ofmap.txt"
+    // file
     std::ofstream ofmap_file;
     ofmap_file.open("data/" + layer_name + "_ofmap.txt");
     for(int i = 0; i < OFMAP_HEIGHT; i++){
@@ -56,7 +73,11 @@ void run_layer(string layer_name){
 
     
     std::ifstream gold_ofmap_file;
+    // opens the correct pre_computed ofmap data saved in "_gold_ofmap.txt" file
     gold_ofmap_file.open("data/" + layer_name + "_gold_ofmap.txt");
+
+    // compares the ofmap data obtained by "conv_gold.cpp" with the
+    // correct value
     for(int i = 0; i < OFMAP_HEIGHT; i++){
         for(int j = 0; j < OFMAP_WIDTH; j++){
             for(int k = 0; k < OFMAP_CHANNELS; k++){
