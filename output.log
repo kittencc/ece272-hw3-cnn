@@ -1,6 +1,6 @@
 *** Using c compiler gcc instead of cc ...
                          Chronologic VCS (TM)
-      Version R-2020.12-SP2-1_Full64 -- Sat Apr 30 23:42:15 2022
+      Version R-2020.12-SP2-1_Full64 -- Sun May  1 23:59:38 2022
 
                     Copyright (c) 1991 - 2021 Synopsys, Inc.
    This software and the associated documentation are proprietary to Synopsys,
@@ -14,7 +14,7 @@ Warning-[LCA_FEATURES_ENABLED] Usage warning
   information regarding list of LCA features please refer to Chapter "LCA 
   features" in the VCS Release Notes
 
-Parsing design file 'tests/input_chaining_tb.v'
+Parsing design file 'tests/ifmap_input_controller_tb.sv'
 Parsing design file 'verilog/accum_out_skew_fifo.v'
 Parsing design file 'verilog/mac_more.v'
 Parsing design file 'verilog/en_weight_shifter.v'
@@ -41,11 +41,10 @@ Parsing design file 'verilog/counter.v'
 Parsing design file 'verilog/mux2.v'
 Parsing design file 'verilog/ram_sync_1r1w.v'
 Top Level Modules:
-       input_chaining_tb
+       ifmap_input_controller_tb
        mac_more
        weight_input_controller
        ofmap_output_controller
-       ifmap_input_controller
 
 Warning-[AOUP] Attempt to override undefined parameter
 verilog/weight_input_controller.v, 112
@@ -61,16 +60,19 @@ Warning-[AOUP] Attempt to override undefined parameter
 verilog/ofmap_PISO.v, 73
   Attempting to override undefined parameter "MAX_COUNT", will ignore it.
 
-
-Warning-[AOUP] Attempt to override undefined parameter
-verilog/ifmap_input_controller.v, 114
-  Attempting to override undefined parameter "MAX_COUNT", will ignore it.
-
 TimeScale is 1 ns / 1 ps
 
 Warning-[TFIPC] Too few instance port connections
 verilog/weight_input_controller.v, 112
 weight_input_controller, "counter #(.MAX_COUNT((WRITE_BANK_NUM + 1)), .COUNTER_WID(COUNTER_WID)) write_bank_counter_inst( .clk (clk),  .rst_n (rst_n),  .en (one_write_bank_done),  .count (write_bank_count));"
+  The above instance has fewer port connections than the module definition.
+  Please use '+lint=TFIPC-L' to print out detailed information of unconnected 
+  ports.
+
+
+Warning-[TFIPC] Too few instance port connections
+verilog/weight_input_controller.v, 186
+weight_input_controller, "ifmap_input_FSM weight_input_FSM_inst( .clk (clk),  .rst_n (rst_n),  .chaining_last_one (chaining_last_one),  .writing_last_data (writing_last_data),  .ready_to_switch (ready_to_switch),  .start_new_write_bank (start_new_write_bank),  .en_input_chaining (en_input_chaining),  .rst_n_chaining (rst_n_chaining),  .switch (switch));"
   The above instance has fewer port connections than the module definition.
   Please use '+lint=TFIPC-L' to print out detailed information of unconnected 
   ports.
@@ -91,22 +93,17 @@ ofmap_output_controller, "counter #(.MAX_COUNT((OY1_OX1_OC1 + 1)), .COUNTER_WID(
   Please use '+lint=TFIPC-L' to print out detailed information of unconnected 
   ports.
 
-
-Warning-[TFIPC] Too few instance port connections
-verilog/ifmap_input_controller.v, 114
-ifmap_input_controller, "counter #(.MAX_COUNT((OY1_OX1 + 1)), .COUNTER_WID(COUNTER_WID)) write_bank_counter_inst( .clk (clk),  .rst_n (rst_n),  .en (one_write_bank_done),  .count (write_bank_count));"
-  The above instance has fewer port connections than the module definition.
-  Please use '+lint=TFIPC-L' to print out detailed information of unconnected 
-  ports.
-
 Starting vcs inline pass...
 
-12 modules and 0 UDP read.
-recompiling module input_chaining_tb
-	However, due to incremental compilation, only 1 module needs to be compiled. 
+11 modules and 0 UDP read.
+recompiling module ifmap_input_controller_tb
+recompiling module weight_input_controller
+recompiling module ifmap_input_FSM
+3 of 11 modules done
+	However, due to incremental compilation, only 3 modules need to be compiled. 
 
 Warning-[KDB-ELAB-W] Verdi KDB elaboration with warning
-  Verdi KDB elaboration finished with 0 error(s) and 4 warning(s).
+  Verdi KDB elaboration finished with 0 error(s) and 3 warning(s).
   Please look at this Verdi elaboration log file for details. 
   /home/users/ctorng/work/cc/ee272-hw3/simv.daidir/elabcomLog/compiler.log
 
@@ -118,8 +115,8 @@ ld -shared  -Bsymbolic   -o .//../simv.daidir//_cuarc0.so objs/amcQw_d.o
 rm -f _cuarc0.so
 cc1: warning: command line option '-std=c++11' is valid for C++/ObjC++ but not for C [enabled by default]
 if [ -x ../simv ]; then chmod a-x ../simv; fi
-g++  -o ../simv      -rdynamic  -Wl,-rpath='$ORIGIN'/simv.daidir -Wl,-rpath=./simv.daidir -Wl,-rpath=/cad/synopsys/vcs/R-2020.12-SP2-1/linux64/lib -L/cad/synopsys/vcs/R-2020.12-SP2-1/linux64/lib  -Wl,-rpath-link=./  /usr/lib64/libnuma.so.1 conv_gold_sv.o     _10257_archive_1.so _prev_archive_1.so _cuarc0.so  SIM_l.o      rmapats_mop.o rmapats.o rmar.o rmar_nd.o  rmar_llvm_0_1.o rmar_llvm_0_0.o           -lvirsim -lerrorinf -lsnpsmalloc -lvfs    -lvcsnew -lsimprofile -luclinative /cad/synopsys/vcs/R-2020.12-SP2-1/linux64/lib/vcs_tls.o   -Wl,-whole-archive  -lvcsucli    -Wl,-no-whole-archive        _vcs_pli_stub_.o   /cad/synopsys/vcs/R-2020.12-SP2-1/linux64/lib/vcs_save_restore_new.o /cad/synopsys/verdi/R-2020.12-SP2-5/share/PLI/VCS/LINUX64/pli.a -ldl  -lc -lm -lpthread -ldl 
+g++  -o ../simv      -rdynamic  -Wl,-rpath='$ORIGIN'/simv.daidir -Wl,-rpath=./simv.daidir -Wl,-rpath=/cad/synopsys/vcs/R-2020.12-SP2-1/linux64/lib -L/cad/synopsys/vcs/R-2020.12-SP2-1/linux64/lib  -Wl,-rpath-link=./  /usr/lib64/libnuma.so.1 conv_gold_sv.o     _20793_archive_1.so _prev_archive_1.so _cuarc0.so  SIM_l.o      rmapats_mop.o rmapats.o rmar.o rmar_nd.o  rmar_llvm_0_1.o rmar_llvm_0_0.o           -lvirsim -lerrorinf -lsnpsmalloc -lvfs    -lvcsnew -lsimprofile -luclinative /cad/synopsys/vcs/R-2020.12-SP2-1/linux64/lib/vcs_tls.o   -Wl,-whole-archive  -lvcsucli    -Wl,-no-whole-archive        _vcs_pli_stub_.o   /cad/synopsys/vcs/R-2020.12-SP2-1/linux64/lib/vcs_save_restore_new.o /cad/synopsys/verdi/R-2020.12-SP2-5/share/PLI/VCS/LINUX64/pli.a -ldl  -lc -lm -lpthread -ldl 
 ../simv up to date
 make[1]: Leaving directory `/home/users/ctorng/work/cc/ee272-hw3/csrc'
-CPU time: 1.951 seconds to compile + .828 seconds to elab + .722 seconds to link
-Verdi KDB elaboration done and the database successfully generated: 0 error(s), 4 warning(s)
+CPU time: 2.096 seconds to compile + .794 seconds to elab + .707 seconds to link
+Verdi KDB elaboration done and the database successfully generated: 0 error(s), 3 warning(s)

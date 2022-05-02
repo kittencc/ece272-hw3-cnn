@@ -191,6 +191,7 @@ ifmap_input_FSM weight_input_FSM_inst (
   .ready_to_switch(ready_to_switch),
   .start_new_write_bank(start_new_write_bank),
 
+  .config_enable(config_enable),
   .en_input_chaining(en_input_chaining),
   .rst_n_chaining(rst_n_chaining),
   .switch(switch)               // for the double buffer

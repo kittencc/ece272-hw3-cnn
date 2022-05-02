@@ -1,16 +1,17 @@
 // controller for ifmap input
-// connect ifmap_chaining, double_buffer, input_write_addr_gen, and FSM together.  
+// connect ifmap_chaining, double_buffer, input_write_addr_gen, and FSM together.
 // Author: Cheryl (Yingqiu) Cao
 // Date:: 2021-12-28
 // updated on: 2022-01-06
 // updated on: 2022-04-30 : "counter" module related changes
+// updated on: 2022-05-01: changed "config" state for the FSM.
 
 
 module ifmap_input_controller
 # (
   parameter IC0 = 4,
   parameter BANK_ADDR_WIDTH = 16,        // width needed to save IC1*IX0*IY0, OY1_OX1
-  parameter BUFFER_MEM_DEPTH = 256,     // capacity of the memory, larger than IC1*Ix0*IY0
+  parameter BUFFER_MEM_DEPTH = 256     // capacity of the memory, larger than IC1*Ix0*IY0
 )
 (
   input logic        clk,
@@ -34,8 +35,9 @@ module ifmap_input_controller
 // for the controller FSM
   input logic ready_to_switch,                   // from main FSM
   input logic start_new_write_bank,              // from main FSM
+  input logic config_done,           // flag from the top module
 
-//  output logic one_write_bank_done             
+//  output logic one_write_bank_done
   output logic write_bank_ready_to_switch,       // to main_FSM
   output logic [ BANK_ADDR_WIDTH- 1 : 0] write_bank_count
 
@@ -66,7 +68,7 @@ logic [16*IC0-1 : 0] wdata;
 logic one_write_bank_done;                // goes high when we finish writing a whole bank's ifmap data to the double buffer
 logic en_write_bank_count;                // control signal to enable the write_bank counter
 
-// local signals end        
+// local signals end
 
 
 
@@ -77,7 +79,6 @@ assign this_rst_n = rst_n && rst_n_chaining;        // we can reset only the cha
 
 
 
-// config_data is the  concatenation of {IC1*IX0*IY0, OY1_OX}
 
 
 // logic for one_write_bank_done
@@ -96,7 +97,7 @@ end
 always @ ( posedge clk ) begin
   if ( !rst_n || switch )
     write_bank_ready_to_switch <= 1'b0;
-  else if (one_write_bank_done)   
+  else if (one_write_bank_done)
     write_bank_ready_to_switch <= 1'b1;
 end
 
@@ -106,7 +107,7 @@ end
 // connect write_bank counter
 // tracks the curremt # of write banks that were completed
 //  counts from 0 to (MAX_COUNT - 1)
-counter  
+counter
 #(
   .COUNTER_WID(BANK_ADDR_WIDTH)
 )
@@ -122,7 +123,7 @@ write_bank_counter_inst
 
 
 // connect ifmap_chaining module
-input_chaining 
+input_chaining
 #(
  .IC0(IC0),
  .COUNTER_WID(BANK_ADDR_WIDTH)
@@ -142,16 +143,16 @@ input_chaining_inst
 
 
 // connect input_write_addr_gen module
-input_write_addr_gen 
-#( 
+input_write_addr_gen
+#(
   .BANK_ADDR_WIDTH(BANK_ADDR_WIDTH)
-) 
+)
 input_write_addr_gen_inst
 (
   .clk(clk),
   .rst_n(rst_n),
   .addr_enable(addr_enable),
-  .config_data(config_data),
+  .config_data(config_IC1_IY0_IX0),
   .addr(waddr),
   .writing_last_data(writing_last_data)
 );
@@ -159,8 +160,8 @@ input_write_addr_gen_inst
 
 
 // connect  ifmap_double_buffer module
-double_buffer 
-#( 
+double_buffer
+#(
   .DATA_WIDTH(16*IC0),     // original data width 16 * chaining_length of 4
   .BANK_ADDR_WIDTH(BANK_ADDR_WIDTH),       // width of read/write addr
   .MEM_DEPTH(BUFFER_MEM_DEPTH)     // capacity of the memory
@@ -188,8 +189,8 @@ ifmap_input_FSM ifmap_input_FSM_inst (
   .writing_last_data(writing_last_data),
   .ready_to_switch(ready_to_switch),
   .start_new_write_bank(start_new_write_bank),
+  .config_done(config_done),
 
-  .config_enable(config_enable),
   .en_input_chaining(en_input_chaining),
   .rst_n_chaining(rst_n_chaining),
   .switch(switch)               // for the double buffer

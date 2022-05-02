@@ -3,6 +3,8 @@
 // Author: Cheryl (Yingqiu) Cao
 // Date: 2021-12-28
 // updated on: 2021-12-30
+// Updated on: 2022-04-30: changed "config" state operations and
+//             transitions.
 
 
 module ifmap_input_FSM(
@@ -12,8 +14,8 @@ module ifmap_input_FSM(
   input logic writing_last_data,     // writing the last data in the bank to the double buffer this cycle
   input logic ready_to_switch,       // ready to switch the double buffer
   input logic start_new_write_bank,
+  input logic config_done,           // flag from the top module
 
-  output logic config_enable,
   output logic en_input_chaining,
   output logic rst_n_chaining,   
   output logic switch               // for the double buffer
@@ -54,7 +56,10 @@ always @ ( * ) begin
       else
         next_state <= RESET;
     CONFIG:
-      next_state <= INPUT_CHAINING;
+      if (config_done)
+        next_state <= INPUT_CHAINING;
+      else
+        next_state <= CONFIG;
     INPUT_CHAINING:
       if (chaining_last_one)
         next_state <= RESET_CHAINING;
@@ -94,56 +99,48 @@ always @ ( * ) begin
   casez (state)
     RESET:
       begin
-        config_enable       <= 1'b0;
         en_input_chaining   <= 1'b0;
         switch              <= 1'b0;    
         rst_n_chaining      <= 1'b0;
       end
     CONFIG: 
       begin
-        config_enable       <= 1'b1;       // goes high
         en_input_chaining   <= 1'b0;
         switch              <= 1'b0;    
         rst_n_chaining      <= 1'b1;
       end
     INPUT_CHAINING:
       begin
-        config_enable       <= 1'b0;       // goes low
         en_input_chaining   <= 1'b1;      // goes high
         switch              <= 1'b0;    
         rst_n_chaining      <= 1'b1;
       end
     RESET_CHAINING:       // no need for change
       begin
-        config_enable       <= 1'b0;
         en_input_chaining   <= 1'b0;
         switch              <= 1'b0;    
         rst_n_chaining      <= 1'b0;
       end
     WRITE_BANK_COUNT:
       begin
-        config_enable       <= 1'b0;
         en_input_chaining   <= 1'b0;
         switch              <= 1'b0;    
         rst_n_chaining      <= 1'b1;
      end
     SWITCH:
       begin
-        config_enable       <= 1'b0;
         en_input_chaining   <= 1'b0;
         switch              <= 1'b1;     // goes high
         rst_n_chaining      <= 1'b1;
       end
     WAIT1:                 // no need for change
       begin
-        config_enable       <= 1'b0;
         en_input_chaining   <= 1'b0;
         switch              <= 1'b0;    
         rst_n_chaining      <= 1'b1;
      end
     WAIT2:                 // no need for change
       begin
-        config_enable       <= 1'b0;
         en_input_chaining   <= 1'b0;
         switch              <= 1'b0;    
         rst_n_chaining      <= 1'b1;
