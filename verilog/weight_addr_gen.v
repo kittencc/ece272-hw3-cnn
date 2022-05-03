@@ -7,19 +7,19 @@
 //               - Each weight entry is chained over OC0 = 4;
 // Author: Cheryl (Yingqiu) Cao
 // Date: 2022-3-19
+// Updated on 2022-05-02: config_data loading logic moved to top level
+
 
 
 module weight_addr_gen
 # (
-  parameter CONFIG_WIDTH = 32,
   parameter BANK_ADDR_WIDTH = 32
 )
 (
   input logic clk,
   input logic rst_n,
   input logic addr_enable,
-  input logic config_enable,
-  input logic [CONFIG_WIDTH - 1 : 0] config_data,
+  input logic [BANK_ADDR_WIDTH - 1 : 0] config_data,
 
   output logic [BANK_ADDR_WIDTH - 1 : 0] addr,
   output logic writing_last_data
@@ -31,21 +31,11 @@ module weight_addr_gen
   logic [BANK_ADDR_WIDTH - 1 : 0] index;      // saves the current addr
   logic last_input_write_addr;                     // high if the current addr is the last one
 
+
+  assign config_OC1_IC1_FY_FX_IC0 = config_data;
   assign last_input_write_addr = (index == config_OC1_IC1_FY_FX_IC0 - 1); 
   assign writing_last_data = addr_enable && last_input_write_addr;  // writing the last data in the bank the current cycle (done next cycle)
 
-
-  
-  always @ (posedge clk) begin
-    if (rst_n) begin
-      if (config_enable) begin
-        config_OC1_IC1_FY_FX_IC0 <= config_data[BANK_ADDR_WIDTH - 1 : 0]; 
-      end
-    end else begin
-      config_OC1_IC1_FY_FX_IC0 <= 0;
-    end
-  end
-  
 
    
   always @ (posedge clk) begin

@@ -1,18 +1,14 @@
 // controller for weight input
-// connect weight_chaining, double_buffer, weight_write_addr_gen, and FSM together.  
+// connect weight_chaining, weight double_buffer, weight_write_addr_gen, and FSM together.
 // Author: Cheryl (Yingqiu) Cao
-// Date:: 2021-3-19
-
+// Date:: 2022-05-02
 
 
 module weight_input_controller
 # (
   parameter OC0 = 4,
-  parameter COUNTER_WID = 16,             // needs to be large enough to save OC1*IC1*FY*FX*IC0
-  parameter CONFIG_WIDTH = 32,
-  parameter BANK_ADDR_WIDTH = 32,
-  parameter BUFFER_MEM_DEPTH = 256,     // capacity of the memory, larger than IC1*Ix0*IY0
-  parameter WRITE_BANK_NUM = 1       // used for the write_bank_counter, the number of weight banks we need to write to,  one
+  parameter BANK_ADDR_WIDTH = 16,        // width needed to save OC1*IC1*FY*FX*OC0
+  parameter BUFFER_MEM_DEPTH = 256     // capacity of the memory, larger than IC1*Ix0*IY0
 )
 (
   input logic        clk,
@@ -23,8 +19,9 @@ module weight_input_controller
   input logic        input_vld,
   output logic       input_rdy,
 
-// for write_addr_gen
-  input logic [CONFIG_WIDTH - 1 : 0] config_data,
+  // for the config parameters
+  input logic [BANK_ADDR_WIDTH - 1 : 0] config_data_weight_read,
+
 // for the weight_double_buffer
   input logic ren,
   input logic [BANK_ADDR_WIDTH - 1 : 0] raddr,
@@ -33,16 +30,17 @@ module weight_input_controller
 // for the controller FSM
   input logic ready_to_switch,                   // from main FSM
   input logic start_new_write_bank,              // from main FSM
+  input logic config_done,           // flag from the top module
 
-//  output logic one_write_bank_done,             
+//  output logic one_write_bank_done
   output logic write_bank_ready_to_switch,       // to main_FSM
-  output logic [COUNTER_WID - 1 : 0] write_bank_count
+  output logic [ BANK_ADDR_WIDTH- 1 : 0] write_bank_count
 
 );
 
 
 // local signals begin
-// for ifmap_chaining
+// for input_chaining
 logic              this_rst_n;          // reset signal for the chaining module
 logic              rst_n_chaining;      // from the FSM
 logic              en_input_chaining;   // en for the chaining module
@@ -56,7 +54,7 @@ logic                           config_enable;
 logic [BANK_ADDR_WIDTH - 1 : 0] waddr;
 logic                           writing_last_data;      // writing the last data in the bank to the double buffer this cycle (done next cycle)
 
-// for the ifmap_double_buffer
+// for the weight_double_buffer
 logic switch;
 logic wen;
 logic [16*OC0-1 : 0] wdata;
@@ -65,8 +63,7 @@ logic [16*OC0-1 : 0] wdata;
 logic one_write_bank_done;                // goes high when we finish writing a whole bank's ifmap data to the double buffer
 logic en_write_bank_count;                // control signal to enable the write_bank counter
 
-
-// local signals end        
+// local signals end
 
 
 
@@ -74,6 +71,7 @@ assign addr_enable = chaining_done;
 assign wen = chaining_done;
 assign wdata = input_dat_chained;
 assign this_rst_n = rst_n && rst_n_chaining;        // we can reset only the chaining module but not others by rst_n_chaining
+
 
 
 
@@ -94,7 +92,7 @@ end
 always @ ( posedge clk ) begin
   if ( !rst_n || switch )
     write_bank_ready_to_switch <= 1'b0;
-  else if (one_write_bank_done)   
+  else if (one_write_bank_done)
     write_bank_ready_to_switch <= 1'b1;
 end
 
@@ -104,26 +102,26 @@ end
 // connect write_bank counter
 // tracks the curremt # of write banks that were completed
 //  counts from 0 to (MAX_COUNT - 1)
-counter  
+counter
 #(
-  .MAX_COUNT(WRITE_BANK_NUM+1),
-  .COUNTER_WID(COUNTER_WID)
+  .COUNTER_WID(BANK_ADDR_WIDTH)
 )
 write_bank_counter_inst
 (
   .clk(clk),
   .rst_n(rst_n),
   .en(one_write_bank_done),
-  .count(write_bank_count)
+  .count(write_bank_count),
+  .config_MAX_COUNT({BANK_ADDR_WIDTH'(2)})
 );
 
 
 
 // connect ifmap_chaining module
-input_chaining 
+input_chaining
 #(
  .IC0(OC0),
- .COUNTER_WID(COUNTER_WID)
+ .COUNTER_WID(BANK_ADDR_WIDTH)
 )
 input_chaining_inst
 (
@@ -139,12 +137,9 @@ input_chaining_inst
 );
 
 
-
-
-// connect weight_write_addr_gen module
+// connect input_write_addr_gen module
 weight_addr_gen
-# (
-  .CONFIG_WIDTH(CONFIG_WIDTH),
+#(
   .BANK_ADDR_WIDTH(BANK_ADDR_WIDTH)
 )
 weight_write_addr_gen_inst
@@ -152,8 +147,7 @@ weight_write_addr_gen_inst
   .clk(clk),
   .rst_n(rst_n),
   .addr_enable(addr_enable),
-  .config_enable(config_enable),
-  .config_data(config_data),
+  .config_data(config_data_weight_read),
   .addr(waddr),
   .writing_last_data(writing_last_data)
 );
@@ -161,8 +155,8 @@ weight_write_addr_gen_inst
 
 
 // connect  ifmap_double_buffer module
-double_buffer 
-#( 
+double_buffer
+#(
   .DATA_WIDTH(16*OC0),     // original data width 16 * chaining_length of 4
   .BANK_ADDR_WIDTH(BANK_ADDR_WIDTH),       // width of read/write addr
   .MEM_DEPTH(BUFFER_MEM_DEPTH)     // capacity of the memory
@@ -190,6 +184,7 @@ ifmap_input_FSM weight_input_FSM_inst (
   .writing_last_data(writing_last_data),
   .ready_to_switch(ready_to_switch),
   .start_new_write_bank(start_new_write_bank),
+  .config_done(config_done),
 
   .en_input_chaining(en_input_chaining),
   .rst_n_chaining(rst_n_chaining),
