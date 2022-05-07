@@ -2,6 +2,7 @@
 //              4_3_2_1 and 8_7_6_5
 // Author: Cheryl (Yingqiu) Cao
 // Date: 2022-01-17
+// updated on: 2022-05-07: switching from DVE to Verdi
 
 
 
@@ -127,12 +128,23 @@ initial begin
 end
 
 
+//initial begin
+//    $vcdplusfile("dump.vcd");
+//    $vcdplusmemon();
+//    $vcdpluson(0, ofmap_PISO_tb);
+//    #20000000;
+//    $finish(2);
+//  end
+
+
 initial begin
-    $vcdplusfile("dump.vcd");
-    $vcdplusmemon();
-    $vcdpluson(0, ofmap_PISO_tb);
-    #20000000;
-    $finish(2);
-  end
+  $fsdbDumpfile("dump.fsdb");
+  $fsdbDumpvars(0, ofmap_PISO_tb);
+  $fsdbDumpMDA(0, ofmap_PISO_tb);
+  #10000;
+  $finish;
+end
+
+
 
 endmodule

@@ -4,7 +4,7 @@
 // testbench through the serial bus.
 // Author: Cheryl (Yingqiu) Cao
 // Date: 2022-01-17
-
+// Updated on 2022-05-07: counter module was updated
 
 module ofmap_PISO
 # (
@@ -35,6 +35,7 @@ logic ready_to_unchain;
 logic en_shifter;
 logic [COUNTER_WID-1 : 0] count;          // monitor the # of data getting unchained
 logic [32*OC0 - 1 : 0] Q_dat_chained;     // local copy of the chained data. Making a copy so that the input chained_data only needs to stay valid for one clk cycle
+logic [COUNTER_WID-1 : 0] config_MAX_COUNT;  // counter counts to config_MAX_COUNT - 1
 
 // signals for the chained FFs
 logic [31 : 0]   Q  [ OC0-1 : 0];    //  output signal Q for the chained FFs
@@ -52,6 +53,9 @@ assign en_shifter = en_PISO && ready_to_unchain;
 // assign output chaining_last_one
 assign chaining_last_one = en_shifter && (count == (OC0-1));
 
+// set the MAX_COUNTER for the counter
+assign config_MAX_COUNT = OC0;
+
 
 // logic for ofmap_vld
 // ofmap_vld is en_shifter delayed by 1 clk cycle
@@ -67,7 +71,6 @@ end
 // counts the current # of data getting unchained
 counter 
 #(
-  .MAX_COUNT(OC0),
   .COUNTER_WID(COUNTER_WID)
 )
 counter_inst
@@ -75,7 +78,8 @@ counter_inst
   .clk(clk),
   .rst_n(rst_n),
   .en(en_shifter),
-  .count(count)
+  .count(count),
+  .config_MAX_COUNT(config_MAX_COUNT)
 );
 
 

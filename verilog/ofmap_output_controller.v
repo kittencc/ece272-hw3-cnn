@@ -5,6 +5,8 @@
 // Author: Cheryl (Yingqiu) Cao
 // Date: 2022-03-13
 // Updated on: 2022-03-18
+// Updated on: 2022-05-07
+//    - updated counter port connections
 
 module ofmap_output_controller
 # (
@@ -34,8 +36,10 @@ module ofmap_output_controller
   input logic [BANK_ADDR_WIDTH - 1 : 0] raddr_accum,
   output logic [32*OC0 - 1 : 0] rdata_accum,
 
+  // for the config parameters
   // for ofmap_read_addr_gen
   input logic [CONFIG_WIDTH - 1 : 0] config_data,
+  input logic [BANK_ADDR_WIDTH - 1 : 0] config_OY1_OX1_OC1,
 
   // for the main FSM
   input logic ready_to_switch,
@@ -90,7 +94,6 @@ end
 //  counts from 0 to (MAX_COUNT - 1)
 counter  
 #(
-  .MAX_COUNT(OY1_OX1_OC1+1),
   .COUNTER_WID(COUNTER_WID)
 )
 ofmap_read_bank_counter_inst
@@ -99,6 +102,7 @@ ofmap_read_bank_counter_inst
   .rst_n(rst_n),
   .en(one_read_bank_done),
   .count(ofmap_read_bank_count)
+  .config_MAX_COUNT(config_OY1_OX1_OC1 + 1)
 );
 
 

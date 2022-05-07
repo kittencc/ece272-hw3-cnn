@@ -20,7 +20,7 @@ compile_tb: tests/conv_tb.sv verilog/conv.sv conv_gold.cpp
 		conv_gold_sv.cpp \
 		| tee output.log
 
-compile_tb_cc: tests/ifmap_input_controller_tb.sv verilog/accum_out_skew_fifo.v verilog/mac_more.v verilog/en_weight_shifter.v verilog/wrapped_skew_fifo.v verilog/input_skew_fifos.v verilog/fifo.v verilog/SizedFIFO.v verilog/mac_array.v verilog/mac.v verilog/weight_input_controller.v verilog/weight_addr_gen.v verilog/ofmap_output_controller.v verilog/ofmap_FSM.v verilog/ofmap_PISO.v verilog/accum_double_buffer.v verilog/accum_addr_gen.v verilog/ifmap_input_controller.v verilog/ifmap_input_FSM.v verilog/double_buffer.v verilog/input_write_addr_gen.v verilog/input_read_addr_gen.v verilog/input_chaining.v verilog/ff.v verilog/counter.v verilog/mux2.v verilog/ram_sync_1r1w.v 
+compile_tb_cc: tests/ofmap_PISO_tb.sv verilog/accum_out_skew_fifo.v verilog/mac_more.v verilog/en_weight_shifter.v verilog/wrapped_skew_fifo.v verilog/input_skew_fifos.v verilog/fifo.v verilog/SizedFIFO.v verilog/mac_array.v verilog/mac.v verilog/weight_input_controller.v verilog/weight_addr_gen.v verilog/ofmap_output_controller.v verilog/ofmap_FSM.v verilog/ofmap_PISO.v verilog/accum_double_buffer.v verilog/accum_addr_gen.v verilog/ifmap_input_controller.v verilog/ifmap_input_FSM.v verilog/double_buffer.v verilog/input_write_addr_gen.v verilog/input_read_addr_gen.v verilog/input_chaining.v verilog/ff.v verilog/counter.v verilog/mux2.v verilog/ram_sync_1r1w.v 
 	vcs -full64 \
 		-sverilog \
 		-timescale=1ns/1ps \
@@ -29,7 +29,7 @@ compile_tb_cc: tests/ifmap_input_controller_tb.sv verilog/accum_out_skew_fifo.v 
 		-lca \
 		-cflags "-std=c++11" \
 		+vc+abstract \
-		tests/ifmap_input_controller_tb.sv \
+		tests/ofmap_PISO_tb.sv \
 		verilog/accum_out_skew_fifo.v \
 		verilog/mac_more.v \
 		verilog/en_weight_shifter.v \
