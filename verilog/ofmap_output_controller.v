@@ -9,6 +9,7 @@
 //    - updated counter port connections
 //    - modified accum_addr_gen module
 //    - updated IO ports and parameters
+//    - updated connections for ofmap_FSM
 
 module ofmap_output_controller
 # (
@@ -40,6 +41,7 @@ module ofmap_output_controller
   input logic [BANK_ADDR_WIDTH - 1 : 0] config_OY1_OX1_OC1,   // for read bank counter
 
   // for the main FSM
+  input logic config_done,     // from the top FSM
   input logic ready_to_switch,
   input logic start_new_read_bank,
   output logic read_bank_ready_to_switch,
@@ -99,7 +101,7 @@ ofmap_read_bank_counter_inst
   .clk(clk),
   .rst_n(rst_n),
   .en(one_read_bank_done),
-  .count(ofmap_read_bank_count)
+  .count(ofmap_read_bank_count),
   .config_MAX_COUNT(config_OY1_OX1_OC1 + 1)
 );
 
@@ -178,7 +180,6 @@ ofmap_FSM ofmap_FSM_inst
   .clk(clk),
   .rst_n(rst_n),
   .last_ofmap_data(last_ofmap_data),     // the unchained data in the last one in this ofmap bank
-  .config_enable(config_enable),
   .raddr_gen_en(raddr_gen_en),
   .ren(ren_ofmap),
   .switch(switch),
@@ -188,6 +189,7 @@ ofmap_FSM ofmap_FSM_inst
   .load(load),
   .start(start),
   .one_read_bank_done(one_read_bank_done),   // en signal for the counter
+  .config_done(config_done),
   .ready_to_switch(ready_to_switch),
   .start_new_read_bank(start_new_read_bank),
   .read_bank_ready_to_switch(read_bank_ready_to_switch)
