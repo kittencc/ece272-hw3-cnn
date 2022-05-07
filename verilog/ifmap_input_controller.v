@@ -39,7 +39,7 @@ module ifmap_input_controller
 
 //  output logic one_write_bank_done
   output logic write_bank_ready_to_switch,       // to main_FSM
-  output logic [ BANK_ADDR_WIDTH- 1 : 0] write_bank_count
+  output logic [BANK_ADDR_WIDTH - 1 : 0] write_bank_count
 
 );
 

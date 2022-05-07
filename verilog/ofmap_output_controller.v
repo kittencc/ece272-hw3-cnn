@@ -7,15 +7,14 @@
 // Updated on: 2022-03-18
 // Updated on: 2022-05-07
 //    - updated counter port connections
+//    - modified accum_addr_gen module
+//    - updated IO ports and parameters
 
 module ofmap_output_controller
 # (
   parameter OC0 = 4,
-  parameter COUNTER_WID = 4,
-  parameter CONFIG_WIDTH = 32,
   parameter BANK_ADDR_WIDTH = 32,       // width of read/write addr
-  parameter MEM_DEPTH       = 256,     // depth of the accum_double_buffer, larger than OY0 * OX0 = 9
-  parameter OY1_OX1_OC1 = 4*4*4       // used for the ofmap_read_bank_counter
+  parameter MEM_DEPTH       = 256     // depth of the accum_double_buffer, larger than OY0 * OX0 = 9
 
 )
 (
@@ -37,15 +36,14 @@ module ofmap_output_controller
   output logic [32*OC0 - 1 : 0] rdata_accum,
 
   // for the config parameters
-  // for ofmap_read_addr_gen
-  input logic [CONFIG_WIDTH - 1 : 0] config_data,
-  input logic [BANK_ADDR_WIDTH - 1 : 0] config_OY1_OX1_OC1,
+  input logic [BANK_ADDR_WIDTH - 1 : 0] config_OY0_OX0,   // for ofmap_read_addr_gen
+  input logic [BANK_ADDR_WIDTH - 1 : 0] config_OY1_OX1_OC1,   // for read bank counter
 
   // for the main FSM
   input logic ready_to_switch,
   input logic start_new_read_bank,
   output logic read_bank_ready_to_switch,
-  output logic [COUNTER_WID - 1 : 0] ofmap_read_bank_count     // the # of ofmap read bank that was completed, up to OY1_OX1_OC1
+  output logic [BANK_ADDR_WIDTH - 1 : 0] ofmap_read_bank_count     // the # of ofmap read bank that was completed, up to OY1_OX1_OC1
 
 );
 
@@ -94,7 +92,7 @@ end
 //  counts from 0 to (MAX_COUNT - 1)
 counter  
 #(
-  .COUNTER_WID(COUNTER_WID)
+  .COUNTER_WID(BANK_ADDR_WIDTH)
 )
 ofmap_read_bank_counter_inst
 (
@@ -111,7 +109,7 @@ ofmap_read_bank_counter_inst
 ofmap_PISO
 # (
   .OC0(OC0),
-  .COUNTER_WID(COUNTER_WID)
+  .COUNTER_WID(BANK_ADDR_WIDTH)
 )
 ofmap_PISO_inst
 (
@@ -159,7 +157,6 @@ accum_double_buffer_inst
 // connect ofmap_read_addr_gen
 accum_addr_gen
 # (
-  .CONFIG_WIDTH(CONFIG_WIDTH),
   .BANK_ADDR_WIDTH(BANK_ADDR_WIDTH)
 )
 ofmap_read_addr_gen_inst
@@ -167,8 +164,7 @@ ofmap_read_addr_gen_inst
   .clk(clk),
   .rst_n(rst_n),
   .addr_enable(raddr_gen_en),
-  .config_enable(config_enable),
-  .config_data(config_data),
+  .config_data(config_OY0_OX0),
   .addr(raddr_ofmap),
   .writing_last_data(reading_last_data)
 );

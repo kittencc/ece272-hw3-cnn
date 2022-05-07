@@ -7,7 +7,8 @@
 //             transitions.
 
 
-module ifmap_input_FSM(
+module ifmap_input_FSM
+(
   input logic clk,
   input logic rst_n,
   input logic chaining_last_one,     // the input chaining module is chaining the last data (ready at the output next cycle)

@@ -3,6 +3,9 @@
 // testbench
 // Author: Cheryl (Yingqiu) Cao
 // Date: 2022-03-12
+// Updated on: 2022-05-07: changed "config" state operations and
+//             transitions.
+
 
 module ofmap_FSM
 (
@@ -11,7 +14,6 @@ module ofmap_FSM
 
   // for the read_addr_gen 
   input logic last_ofmap_data,     // the unchained data in the last one in this ofmap bank
-  output logic config_enable,
   output logic raddr_gen_en,
 
   // for accum_double_buffer
@@ -29,6 +31,7 @@ module ofmap_FSM
   output logic one_read_bank_done,   // en signal for the counter
 
   // for the main FSM
+  input logic config_done,     // from the top FSM
   input logic ready_to_switch,
   input logic start_new_read_bank,
   output logic read_bank_ready_to_switch
@@ -71,7 +74,10 @@ always @ ( * ) begin
       else
         next_state <= RESET;
     CONFIG:
-      next_state <= WAIT1;
+      if (config_done)
+        next_state <= WAIT1;
+      else
+        next_state <= CONFIG;
     READ_DOUBLE_BUF:
       next_state <= LOAD_STATE;
     LOAD_STATE:
@@ -116,7 +122,6 @@ always @ ( * ) begin
   casez (state)
     RESET:
       begin
-        config_enable             <= 1'b0;
         raddr_gen_en              <= 1'b0;
         ren                       <= 1'b0;
         switch                    <= 1'b0;
@@ -128,7 +133,6 @@ always @ ( * ) begin
       end
     CONFIG:
      begin
-        config_enable             <= 1'b1;
         raddr_gen_en              <= 1'b0;
         ren                       <= 1'b0;
         switch                    <= 1'b0;
@@ -140,7 +144,6 @@ always @ ( * ) begin
      end
     READ_DOUBLE_BUF:
      begin
-        config_enable             <= 1'b0;
         raddr_gen_en              <= 1'b1;
         ren                       <= 1'b1;
         switch                    <= 1'b0;
@@ -152,7 +155,6 @@ always @ ( * ) begin
      end
     LOAD_STATE:
        begin
-        config_enable             <= 1'b0;
         raddr_gen_en              <= 1'b0;
         ren                       <= 1'b0;
         switch                    <= 1'b0;
@@ -164,7 +166,6 @@ always @ ( * ) begin
       end
     START_PISO:
        begin
-        config_enable             <= 1'b0;
         raddr_gen_en              <= 1'b0;
         ren                       <= 1'b0;
         switch                    <= 1'b0;
@@ -176,7 +177,6 @@ always @ ( * ) begin
       end
     PISO:
        begin
-        config_enable             <= 1'b0;
         raddr_gen_en              <= 1'b0;
         ren                       <= 1'b0;
         switch                    <= 1'b0;
@@ -188,7 +188,6 @@ always @ ( * ) begin
       end
     READ_BANK_COUNT:
        begin
-        config_enable             <= 1'b0;
         raddr_gen_en              <= 1'b0;
         ren                       <= 1'b0;
         switch                    <= 1'b0;
@@ -200,7 +199,6 @@ always @ ( * ) begin
       end
     WAIT1:
        begin
-        config_enable             <= 1'b0;
         raddr_gen_en              <= 1'b0;
         ren                       <= 1'b0;
         switch                    <= 1'b0;
@@ -212,7 +210,6 @@ always @ ( * ) begin
       end
     SWITCH:
        begin
-        config_enable             <= 1'b0;
         raddr_gen_en              <= 1'b0;
         ren                       <= 1'b0;
         switch                    <= 1'b1;
@@ -224,7 +221,6 @@ always @ ( * ) begin
       end
     WAIT2:
        begin
-        config_enable             <= 1'b0;
         raddr_gen_en              <= 1'b0;
         ren                       <= 1'b0;
         switch                    <= 1'b0;
