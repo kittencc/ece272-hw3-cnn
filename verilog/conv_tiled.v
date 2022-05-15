@@ -95,6 +95,17 @@ logic [BANK_ADDR_WIDTH - 1 : 0] ofmap_read_bank_count;
 
 
 
+/*  for mac_more module */
+logic rst_n_mac;          // so as to reset just the mac array
+logic en_mac_op;          // enable general operations
+logic en_weight00;   // en_weight signal for the first mac cell ic0 = 0, oc0 = 0
+logic ifmap_fifo_enq;
+logic weight_fifo_enq;
+logic accum_in_fifo_enq;
+logic accum_out_fifo_enq;
+
+
+
 /*  for main FSM  */
 // for ifmap_double_buffer
 logic ifmap_ready_to_switch;
@@ -263,6 +274,31 @@ ofmap_output_controller_inst
 
 );
 
+
+
+/*   connect mac_more module    */
+mac_more
+# (
+  .IC0(IC0),        // height of the mac array
+  .OC0(OC0)         // width of the mac array
+
+)
+mac_more_inst
+(
+  .clk(clk),
+  .rst_n(rst_n || rst_n_mac),  // reset on FSM and external signals
+  .en(en_mac_op),            // en for the entire mac array
+  .en_weight00(en_weight00),   // en_weight signal for the first mac cell ic0 = 0, oc0 = 0
+  .ifmap_fifo_enq(ifmap_fifo_enq),
+  .ifmap_dat_chained_fifo_in(ifmap_double_buffer_rdata),
+  .weight_fifo_enq(weight_fifo_enq),
+  .weight_dat_chained_fifo_in(weight_double_buffer_rdata),
+  .accum_in_fifo_enq(accum_in_fifo_enq),
+  .accum_in_chained_fifo_in(accum_double_buffer_rdata),
+  .accum_out_fifo_enq(accum_out_fifo_enq),
+  .accum_out_chained_fifo_out(accum_double_buffer_wdata)
+
+);
 
 
 
