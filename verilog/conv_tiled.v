@@ -65,6 +65,9 @@ logic [BANK_ADDR_WIDTH - 1 : 0] config_data_weight_read;
 // for accum_addr_gen
 logic [BANK_ADDR_WIDTH - 1 : 0] config_OY0_OX0;
 
+// for read_bank_counter in ofmap_output_controleer
+logic [BANK_ADDR_WIDTH - 1 : 0] config_OY1_OX1_OC1;
+
 
 
 /*    for double buffers   */
@@ -80,6 +83,17 @@ logic [BANK_ADDR_WIDTH - 1 : 0] weight_double_buffer_raddr;
 logic [16*OC0 - 1 : 0] weight_double_buffer_rdata;
 logic [ BANK_ADDR_WIDTH- 1 : 0] weight_write_bank_count;
 
+// for accum_double_buffer
+  // 1 read 1 write ports for the mac array and the accum sum 
+logic accum_double_buffer_wen;
+logic [BANK_ADDR_WIDTH - 1 : 0] accum_double_buffer_waddr;
+logic [32*OC0 - 1 : 0] accum_double_buffer_wdata;
+logic accum_double_buffer_ren;
+logic [BANK_ADDR_WIDTH - 1 : 0] accum_double_buffer_raddr;
+logic [32*OC0 - 1 : 0] accum_double_buffer_rdata;
+logic [BANK_ADDR_WIDTH - 1 : 0] ofmap_read_bank_count; 
+
+
 
 /*  for main FSM  */
 // for ifmap_double_buffer
@@ -91,6 +105,12 @@ logic ifmap_write_bank_ready_to_switch;       // to main_FSM
 logic weight_ready_to_switch;
 logic weight_start_new_write_bank;
 logic weight_write_bank_ready_to_switch;
+
+// accum_fouble_buffer
+logic ofmap_ready_to_switch;       // from main FSM
+logic ofmap_start_new_read_bank;  // output ofmap to testbench
+logic ofmap_read_bank_ready_to_switch;  // to main FSM
+
 
 
 // flag for config_state
@@ -113,7 +133,7 @@ assign config_IC1_IY0_IX0      = config_IC1 * config_IY0 * config_IY0;
 assign config_OY1_OX1          = config_OY1 * config_OY1;
 assign config_data_weight_read = config_OC1 * config_IC1 * config_FY * config_FY * IC0;
 assign config_OY0_OX0          = config_OY0 * config_OY0;
-
+assign config_OY1_OX1_OC1      = config_OY1 * config_OY1 * config_OC1;
 
 
 /*  load config data  */
@@ -201,4 +221,51 @@ weight_input_controller_inst
   .write_bank_count(weight_write_bank_count)
 
 );
+
+
+/*  connect ofmap_output_controller */
+ofmap_output_controller
+# (
+  .OC0(OC0),
+  .BANK_ADDR_WIDTH(BANK_ADDR_WIDTH),       // width of read/write addr
+  .MEM_DEPTH(BUFFER_MEM_DEPTH)     // depth of the accum_double_buffer, larger than OY0 * OX0 = 9
+
+)
+ofmap_output_controller_inst
+(
+  .clk(clk),
+  .rst_n(rst_n),
+
+  // for ofmap_PISO
+  .ofmap_rdy(ofmap_rdy),
+  .ofmap_dat(ofmap_dat),
+  .ofmap_vld(ofmap_vld),
+
+  // for accum_double_buffer
+  // 1 read 1 write ports for the mac array and the accum sum 
+  .wen(accum_double_buffer_wen),
+  .waddr(accum_double_buffer_waddr),
+  .wdata(accum_double_buffer_wdata),
+  .ren(accum_double_buffer_ren),
+  .raddr_accum(accum_double_buffer_raddr),
+  .rdata_accum(accum_double_buffer_rdata),
+
+  // for the config parameters
+  .config_OY0_OX0(config_OY0_OX0),   // for ofmap_read_addr_gen
+  .config_OY1_OX1_OC1(config_OY1_OX1_OC1),   // for read bank counter
+
+  // for the main FSM
+  .config_done(config_done),     // from the top FSM
+  .ready_to_switch(ofmap_ready_to_switch),
+  .start_new_read_bank(ofmap_start_new_read_bank),
+  .read_bank_ready_to_switch(ofmap_read_bank_ready_to_switch),
+  .ofmap_read_bank_count(ofmap_read_bank_count)     // the # of ofmap read bank that was completed, up to OY1_OX1_OC1
+
+);
+
+
+
+
+
+
 endmodule
