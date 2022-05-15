@@ -1,6 +1,6 @@
 *** Using c compiler gcc instead of cc ...
                          Chronologic VCS (TM)
-      Version R-2020.12-SP2-1_Full64 -- Sun May 15 15:05:09 2022
+      Version R-2020.12-SP2-1_Full64 -- Sun May 15 15:25:27 2022
 
                     Copyright (c) 1991 - 2021 Synopsys, Inc.
    This software and the associated documentation are proprietary to Synopsys,
@@ -46,13 +46,11 @@ Top Level Modules:
        ofmap_output_controller_tb1
        conv_tiled
        mac_more
-       weight_input_controller
        input_read_addr_gen
 TimeScale is 1 ns / 1 ps
 Starting vcs inline pass...
 
-13 modules and 0 UDP read.
-recompiling module ofmap_output_controller_tb1
+14 modules and 0 UDP read.
 recompiling module conv_tiled
 recompiling module accum_out_skew_fifo
 recompiling module mac_more
@@ -61,19 +59,20 @@ recompiling module wrapped_skew_fifo
 recompiling module input_skew_fifos
 recompiling module fifo
 recompiling module mac_array
-recompiling module weight_input_controller
 recompiling module ifmap_input_FSM
-recompiling module input_read_addr_gen
+recompiling module double_buffer
+recompiling module input_chaining
 recompiling module ram_sync_1r1w
-All of 13 modules done
+12 of 14 modules done
+	However, due to incremental compilation, only 12 modules need to be compiled. 
 make[1]: Entering directory `/home/users/ctorng/work/cc/ee272-hw3/csrc'
 make[1]: Leaving directory `/home/users/ctorng/work/cc/ee272-hw3/csrc'
 make[1]: Entering directory `/home/users/ctorng/work/cc/ee272-hw3/csrc'
 rm -f _cuarc*.so _csrc*.so pre_vcsobj_*.so share_vcsobj_*.so
 cc1: warning: command line option '-std=c++11' is valid for C++/ObjC++ but not for C [enabled by default]
 if [ -x ../simv ]; then chmod a-x ../simv; fi
-g++  -o ../simv      -rdynamic  -Wl,-rpath='$ORIGIN'/simv.daidir -Wl,-rpath=./simv.daidir -Wl,-rpath=/cad/synopsys/vcs/R-2020.12-SP2-1/linux64/lib -L/cad/synopsys/vcs/R-2020.12-SP2-1/linux64/lib  -Wl,-rpath-link=./  /usr/lib64/libnuma.so.1 conv_gold_sv.o   objs/amcQw_d.o   _20820_archive_1.so _prev_archive_1.so  SIM_l.o      rmapats_mop.o rmapats.o rmar.o rmar_nd.o  rmar_llvm_0_1.o rmar_llvm_0_0.o           -lvirsim -lerrorinf -lsnpsmalloc -lvfs    -lvcsnew -lsimprofile -luclinative /cad/synopsys/vcs/R-2020.12-SP2-1/linux64/lib/vcs_tls.o   -Wl,-whole-archive  -lvcsucli    -Wl,-no-whole-archive        _vcs_pli_stub_.o   /cad/synopsys/vcs/R-2020.12-SP2-1/linux64/lib/vcs_save_restore_new.o /cad/synopsys/verdi/R-2020.12-SP2-5/share/PLI/VCS/LINUX64/pli.a -ldl  -lc -lm -lpthread -ldl 
+g++  -o ../simv      -rdynamic  -Wl,-rpath='$ORIGIN'/simv.daidir -Wl,-rpath=./simv.daidir -Wl,-rpath=/cad/synopsys/vcs/R-2020.12-SP2-1/linux64/lib -L/cad/synopsys/vcs/R-2020.12-SP2-1/linux64/lib  -Wl,-rpath-link=./  /usr/lib64/libnuma.so.1 conv_gold_sv.o   objs/amcQw_d.o   _29425_archive_1.so _prev_archive_1.so  SIM_l.o      rmapats_mop.o rmapats.o rmar.o rmar_nd.o  rmar_llvm_0_1.o rmar_llvm_0_0.o           -lvirsim -lerrorinf -lsnpsmalloc -lvfs    -lvcsnew -lsimprofile -luclinative /cad/synopsys/vcs/R-2020.12-SP2-1/linux64/lib/vcs_tls.o   -Wl,-whole-archive  -lvcsucli    -Wl,-no-whole-archive        _vcs_pli_stub_.o   /cad/synopsys/vcs/R-2020.12-SP2-1/linux64/lib/vcs_save_restore_new.o /cad/synopsys/verdi/R-2020.12-SP2-5/share/PLI/VCS/LINUX64/pli.a -ldl  -lc -lm -lpthread -ldl 
 ../simv up to date
 make[1]: Leaving directory `/home/users/ctorng/work/cc/ee272-hw3/csrc'
-CPU time: 2.625 seconds to compile + .854 seconds to elab + .686 seconds to link
+CPU time: 2.138 seconds to compile + .768 seconds to elab + .689 seconds to link
 Verdi KDB elaboration done and the database successfully generated: 0 error(s), 0 warning(s)

@@ -42,6 +42,7 @@ module conv_tiled
 );
 
 
+
 // local parameters ++
 
 /*    for layer configuration    */
@@ -65,12 +66,19 @@ logic [BANK_ADDR_WIDTH - 1 : 0] config_data_weight_read;
 logic [BANK_ADDR_WIDTH - 1 : 0] config_OY0_OX0;
 
 
+
 /*    for double buffers   */
 // for the ifmap_double_buffer
 logic ifmap_double_buffer_ren;
 logic [BANK_ADDR_WIDTH - 1 : 0] ifmap_double_buffer_raddr;
 logic [16*IC0 - 1 : 0] ifmap_double_buffer_rdata;
 logic [BANK_ADDR_WIDTH - 1 : 0] ifmap_write_bank_count;
+
+// for the weight_double_buffer
+logic weight_double_buffer_ren;
+logic [BANK_ADDR_WIDTH - 1 : 0] weight_double_buffer_raddr;
+logic [16*OC0 - 1 : 0] weight_double_buffer_rdata;
+logic [ BANK_ADDR_WIDTH- 1 : 0] weight_write_bank_count;
 
 
 /*  for main FSM  */
@@ -79,8 +87,14 @@ logic ifmap_ready_to_switch;
 logic ifmap_start_new_write_bank;
 logic ifmap_write_bank_ready_to_switch;       // to main_FSM
 
+// for weight_double_buffer
+logic weight_ready_to_switch;
+logic weight_start_new_write_bank;
+logic weight_write_bank_ready_to_switch;
+
+
 // flag for config_state
-logic config_done; 
+logic config_done;
 
 
 
@@ -152,4 +166,39 @@ ifmap_input_controller_inst
 );
 
 
+/*  connect the weight_input_controller  */
+weight_input_controller
+# (
+  .OC0(OC0),
+  .BANK_ADDR_WIDTH(BANK_ADDR_WIDTH),        // width needed to save OC1*IC1*FY*FX*OC0
+  .BUFFER_MEM_DEPTH(BUFFER_MEM_DEPTH)     // capacity of the memory, larger than IC1*Ix0*IY0
+)
+weight_input_controller_inst
+(
+  .clk(clk),
+  .rst_n(rst_n),
+
+  // for weight_chaining
+  .input_dat(weights_dat),
+  .input_vld(weights_vld),
+  .input_rdy(weights_rdy),
+
+  // for the config parameters
+  .config_data_weight_read(config_data_weight_read),
+
+// for the weight_double_buffer
+  .ren(weight_double_buffer_ren),
+  .raddr(weight_double_buffer_raddr),
+  .rdata(weight_double_buffer_rdata),
+
+// for the controller FSM
+  .ready_to_switch(weight_ready_to_switch),                   // from main FSM
+  .start_new_write_bank(weight_start_new_write_bank),          // from main FSM
+  .config_done(config_done),           // flag from the top module
+
+//  output logic one_write_bank_done
+  .write_bank_ready_to_switch(weight_write_bank_ready_to_switch),   // to main_FSM
+  .write_bank_count(weight_write_bank_count)
+
+);
 endmodule
