@@ -2,8 +2,11 @@
 // Author: Cheryl (Yingqiu) Cao
 // Date: 2022-04-30
 // Updated on: 2020-05-01: config_data related
-// Updated on: 2022-05-15: connect ifmap/weight/ofmap_controller, MAC_more
+// Updated on: 2022-05-15: 
+//      - connect ifmap/weight/ofmap_controller, MAC_more
 //                         modules
+// Updated on: 2022-05-20:
+//      - connect counters
 
 module conv_tiled
 #(
@@ -43,7 +46,7 @@ module conv_tiled
 
 
 
-// local parameters ++
+// local signals ++
 
 /*    for layer configuration    */
 logic config_en;
@@ -122,15 +125,42 @@ logic ofmap_ready_to_switch;       // from main FSM
 logic ofmap_start_new_read_bank;  // output ofmap to testbench
 logic ofmap_read_bank_ready_to_switch;  // to main FSM
 
-
-
 // flag for config_state
 logic config_done;
 
+// for counters
+logic en_oy0_ox0_counter;
+logic en_oc1_counter;
 
 
-// local parameters --
 
+
+/* for the counters  */
+logic en_ic1_fy_fx_counter;
+logic ic1_fy_fx_iter_done;
+logic oc1_iter_done;
+logic en_oy1_ox1_counter;
+logic last_oy1_ox1;
+
+logic [BANK_ADDR_WIDTH - 1 : 0] oy0_ox0;   // the current iteration for oy0_ox0
+logic [BANK_ADDR_WIDTH - 1 : 0] ic1_fy_fx;
+logic [PARAM_WID- 1 : 0] oc1;
+logic [BANK_ADDR_WIDTH - 1 : 0] oy1_ox1;
+
+
+
+
+// local signals --
+
+
+
+
+/*  assignment for counter en signals  */
+assign en_ic1_fy_fx_counter = (oy0_ox0 == config_OY0_OX0);
+assign ic1_fy_fx_iter_done = (ic1_fy_fx == config_IC1_IY0_IX0) && en_ic1_fy_fx_counter;
+assign oc1_iter_done = (oc1 == (config_OC1-1)) && en_oc1_counter;
+assign en_oy1_ox1_counter = oc1_iter_done;
+assign last_oy1_ox1 = (oy1_ox1 == (config_OY1_OX1-1));
 
 
 
@@ -302,6 +332,68 @@ mac_more_inst
 
 
 
+// counter for oy0_ox0 iteration
+// count from 0 to OY0_OX0
+counter 
+#(
+  .COUNTER_WID(BANK_ADDR_WIDTH)
+)
+oy0_ox0_counter_inst
+(
+  .clk(clk),
+  .rst_n(rst_n),
+  .en(en_oy0_ox0_counter),
+  .count(oy0_ox0),
+  .config_MAX_COUNT(config_OY0_OX0+1)
+);
+
+
+// counter for ic1_fy_fx iteration
+// count from 0 to IC1_FY_FX
+counter 
+#(
+  .COUNTER_WID(BANK_ADDR_WIDTH)
+)
+ic1_fy_fx_counter_inst
+(
+  .clk(clk),
+  .rst_n(rst_n),
+  .en(en_ic1_fy_fx_counter),
+  .count(ic1_fy_fx),
+  .config_MAX_COUNT(config_IC1_IY0_IX0+1)
+);
+
+
+// counter for oc1 iteration
+// count from 0 to OC1-1
+counter 
+#(
+  .COUNTER_WID(PARAM_WID)
+)
+oc1_counter_inst
+(
+  .clk(clk),
+  .rst_n(rst_n),
+  .en(en_oc1_counter),
+  .count(oc1),
+  .config_MAX_COUNT(config_OC1)
+);
+
+
+// counter for oy1_ox1 iteration
+// count from 0 to OY1_OX1-1
+counter 
+#(
+  .COUNTER_WID(BANK_ADDR_WIDTH)
+)
+oy1_ox1_counter_inst
+(
+  .clk(clk),
+  .rst_n(rst_n),
+  .en(en_oy1_ox1_counter),
+  .count(oy1_ox1),
+  .config_MAX_COUNT(config_OY1_OX1)
+);
 
 
 endmodule
