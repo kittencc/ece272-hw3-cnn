@@ -2,11 +2,14 @@
 // Author: Cheryl (Yingqiu) Cao
 // Date: 2022-04-30
 // Updated on: 2020-05-01: config_data related
-// Updated on: 2022-05-15: 
+// Updated on: 2022-05-15:
 //      - connect ifmap/weight/ofmap_controller, MAC_more
 //                         modules
-// Updated on: 2022-05-20:
+// Updated on: 2022-05-29:
 //      - connect counters
+// Updated on: 2022-05-30:
+//      - connect main_FSM
+//      - add logic for counter iter states
 
 module conv_tiled
 #(
@@ -54,20 +57,15 @@ logic [PARAM_WID - 1 : 0] config_OY1, config_OC1, config_IC1, config_FY, config_
 logic [PARAM_WID - 1 : 0] config_IY0;
 
 // for ifmap_read_addr_gen
-logic [8 * PARAM_WID - 1 : 0] config_data_ifmap_read;
-
+logic [8 * PARAM_WID - 1 : 0]   config_data_ifmap_read;
 // for ifmap_write_addr_gen
 logic [BANK_ADDR_WIDTH - 1 : 0] config_IC1_IY0_IX0;
-
 // for write_bank_counter in ifmap_input_controller
 logic [BANK_ADDR_WIDTH - 1 : 0] config_OY1_OX1;
-
 // for weight_addr_gen
 logic [BANK_ADDR_WIDTH - 1 : 0] config_data_weight_read;
-
 // for accum_addr_gen
 logic [BANK_ADDR_WIDTH - 1 : 0] config_OY0_OX0;
-
 // for read_bank_counter in ofmap_output_controleer
 logic [BANK_ADDR_WIDTH - 1 : 0] config_OY1_OX1_OC1;
 
@@ -77,24 +75,24 @@ logic [BANK_ADDR_WIDTH - 1 : 0] config_OY1_OX1_OC1;
 // for the ifmap_double_buffer
 logic ifmap_double_buffer_ren;
 logic [BANK_ADDR_WIDTH - 1 : 0] ifmap_double_buffer_raddr;
-logic [16*IC0 - 1 : 0] ifmap_double_buffer_rdata;
+logic [16*IC0 - 1 : 0]          ifmap_double_buffer_rdata;
 logic [BANK_ADDR_WIDTH - 1 : 0] ifmap_write_bank_count;
 
 // for the weight_double_buffer
 logic weight_double_buffer_ren;
 logic [BANK_ADDR_WIDTH - 1 : 0] weight_double_buffer_raddr;
-logic [16*OC0 - 1 : 0] weight_double_buffer_rdata;
+logic [16*OC0 - 1 : 0]          weight_double_buffer_rdata;
 logic [ BANK_ADDR_WIDTH- 1 : 0] weight_write_bank_count;
 
 // for accum_double_buffer
-  // 1 read 1 write ports for the mac array and the accum sum 
-logic accum_double_buffer_wen;
+  // 1 read 1 write ports for the mac array and the accum sum
+logic                           accum_double_buffer_wen;
 logic [BANK_ADDR_WIDTH - 1 : 0] accum_double_buffer_waddr;
-logic [32*OC0 - 1 : 0] accum_double_buffer_wdata;
-logic accum_double_buffer_ren;
+logic [32*OC0 - 1 : 0]          accum_double_buffer_wdata;
+logic                           accum_double_buffer_ren;
 logic [BANK_ADDR_WIDTH - 1 : 0] accum_double_buffer_raddr;
-logic [32*OC0 - 1 : 0] accum_double_buffer_rdata;
-logic [BANK_ADDR_WIDTH - 1 : 0] ofmap_read_bank_count; 
+logic [32*OC0 - 1 : 0]          accum_double_buffer_rdata;
+logic [BANK_ADDR_WIDTH - 1 : 0] ofmap_read_bank_count;
 
 
 
@@ -114,6 +112,7 @@ logic accum_out_fifo_enq;
 logic ifmap_ready_to_switch;
 logic ifmap_start_new_write_bank;
 logic ifmap_write_bank_ready_to_switch;       // to main_FSM
+logic all_ifmap_write_bank_done;              // to main_FSM
 
 // for weight_double_buffer
 logic weight_ready_to_switch;
@@ -137,14 +136,15 @@ logic en_oc1_counter;
 
 /* for the counters  */
 logic en_ic1_fy_fx_counter;
+logic en_oy1_ox1_counter;
+logic first_oy1_ox1_iter_done;
+logic last_oy1_ox1;
 logic ic1_fy_fx_iter_done;
 logic oc1_iter_done;
-logic en_oy1_ox1_counter;
-logic last_oy1_ox1;
 
 logic [BANK_ADDR_WIDTH - 1 : 0] oy0_ox0;   // the current iteration for oy0_ox0
 logic [BANK_ADDR_WIDTH - 1 : 0] ic1_fy_fx;
-logic [PARAM_WID- 1 : 0] oc1;
+logic [PARAM_WID- 1 : 0]        oc1;
 logic [BANK_ADDR_WIDTH - 1 : 0] oy1_ox1;
 
 
@@ -156,18 +156,27 @@ logic [BANK_ADDR_WIDTH - 1 : 0] oy1_ox1;
 
 
 /*  assignment for counter en signals  */
-assign en_ic1_fy_fx_counter = (oy0_ox0 == config_OY0_OX0);
-assign ic1_fy_fx_iter_done = (ic1_fy_fx == config_IC1_IY0_IX0) && en_ic1_fy_fx_counter;
-assign oc1_iter_done = (oc1 == (config_OC1-1)) && en_oc1_counter;
-assign en_oy1_ox1_counter = oc1_iter_done;
-assign last_oy1_ox1 = (oy1_ox1 == (config_OY1_OX1-1));
+assign en_ic1_fy_fx_counter    = (oy0_ox0 == config_OY0_OX0);
+assign en_oy1_ox1_counter      = oc1_iter_done;
+/*  assignment for iteration states   */
+assign last_oy1_ox1            = (oy1_ox1 == (config_OY1_OX1-1));
+assign ic1_fy_fx_iter_done     = (ic1_fy_fx == config_IC1_IY0_IX0) && en_ic1_fy_fx_counter;
+assign oc1_iter_done           = (oc1 == (config_OC1-1)) && en_oc1_counter;
+assign first_oy1_ox1_iter_done = (oy1_ox1 > 0);
+
+/* assignment for ifmap_write_bank_counter   */
+assign all_ifmap_write_bank_done = (ifmap_write_bank_count == config_OY1_OX1);
+
+/* assignment for weight_double_buffer   */
+assign weight_ready_to_switch = (ifmap_ready_to_switch && (oy1_ox1 == 0) );  // only need to write to the weight banks once, as this is a weight stationary design
+assign weight_start_new_write_bank = 1'b0;    // no need to write to the weight bank for more than once 
+
 
 
 
 /*    assignment for config data   */
 // derive iy0 from oy0
-assign config_IY0 = config_STRIDE * (config_OY0 - 1) + config_FY;
-
+assign config_IY0              = config_STRIDE * (config_OY0 - 1) + config_FY;
 assign config_data_ifmap_read  = {config_OY0, config_OY0, config_FY, config_FY,
                                   config_STRIDE, config_IY0, config_IY0, config_IC1};
 assign config_IC1_IY0_IX0      = config_IC1 * config_IY0 * config_IY0;
@@ -283,7 +292,7 @@ ofmap_output_controller_inst
   .ofmap_vld(ofmap_vld),
 
   // for accum_double_buffer
-  // 1 read 1 write ports for the mac array and the accum sum 
+  // 1 read 1 write ports for the mac array and the accum sum
   .wen(accum_double_buffer_wen),
   .waddr(accum_double_buffer_waddr),
   .wdata(accum_double_buffer_wdata),
@@ -316,7 +325,7 @@ mac_more
 mac_more_inst
 (
   .clk(clk),
-  .rst_n(rst_n || rst_n_mac),  // reset on FSM and external signals
+  .rst_n(rst_n && rst_n_mac),  // reset on FSM and external signals
   .en(en_mac_op),            // en for the entire mac array
   .en_weight00(en_weight00),   // en_weight signal for the first mac cell ic0 = 0, oc0 = 0
   .ifmap_fifo_enq(ifmap_fifo_enq),
@@ -332,9 +341,37 @@ mac_more_inst
 
 
 
+/*   connect main_FSM module    */
+main_FSM main_FSM_inst
+(
+  .clk(clk),
+  .rst_n(rst_n),
+  .config_done(config_done),
+  .first_oy1_ox1_iter_done(first_oy1_ox1_iter_done),
+  .ic1_fy_fx_iter_done(ic1_fy_fx_iter_done),
+  .all_ifmap_write_bank_done(all_ifmap_write_bank_done),
+  .oc1_iter_done(oc1_iter_done),
+  .last_oy1_ox1(last_oy1_ox1),
+  .ifmap_write_bank_ready_to_switch(ifmap_write_bank_ready_to_switch),
+  .weight_write_bank_ready_to_switch(weight_write_bank_ready_to_switch),
+  .ofmap_read_bank_ready_to_switch(ofmap_read_bank_ready_to_switch),
+  .layer_params_rdy(layer_params_rdy),
+  .ifmap_ready_to_switch(ifmap_ready_to_switch),
+  .ifmap_start_new_write_bank(ifmap_start_new_write_bank),
+  .ofmap_ready_to_switch(ofmap_ready_to_switch),
+  .ofmap_start_new_read_bank(ofmap_start_new_read_bank),
+  .en_oy0_ox0_counter(en_oy0_ox0_counter),
+  .en_oc1_counter(en_oc1_counter),
+  .en_mac_op(en_mac_op),
+  .rst_n_mac(rst_n_mac)
+);
+
+
+
+
 // counter for oy0_ox0 iteration
 // count from 0 to OY0_OX0
-counter 
+counter
 #(
   .COUNTER_WID(BANK_ADDR_WIDTH)
 )
@@ -350,7 +387,7 @@ oy0_ox0_counter_inst
 
 // counter for ic1_fy_fx iteration
 // count from 0 to IC1_FY_FX
-counter 
+counter
 #(
   .COUNTER_WID(BANK_ADDR_WIDTH)
 )
@@ -366,7 +403,7 @@ ic1_fy_fx_counter_inst
 
 // counter for oc1 iteration
 // count from 0 to OC1-1
-counter 
+counter
 #(
   .COUNTER_WID(PARAM_WID)
 )
@@ -382,7 +419,7 @@ oc1_counter_inst
 
 // counter for oy1_ox1 iteration
 // count from 0 to OY1_OX1-1
-counter 
+counter
 #(
   .COUNTER_WID(BANK_ADDR_WIDTH)
 )
