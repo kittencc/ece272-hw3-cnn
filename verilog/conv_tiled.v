@@ -10,6 +10,7 @@
 // Updated on: 2022-05-30:
 //      - connect main_FSM
 //      - add logic for counter iter states
+//      - add logic for mac_more module
 
 module conv_tiled
 #(
@@ -140,7 +141,15 @@ logic en_oy1_ox1_counter;
 logic first_oy1_ox1_iter_done;
 logic last_oy1_ox1;
 logic ic1_fy_fx_iter_done;
+logic ic1_fy_fx_not_last_cycle;
+logic ic1_fy_fx_not_zero_cycle;
+logic ic1_fy_fx_not_zero_or_last_cycle;
 logic oc1_iter_done;
+logic oy0_ox0_first_cycle;
+logic oy0_ox0_not_zero_cycle;
+logic oy0_ox0_last_cycle;
+logic oy0_ox0_not_last2_cycle;
+
 
 logic [BANK_ADDR_WIDTH - 1 : 0] oy0_ox0;   // the current iteration for oy0_ox0
 logic [BANK_ADDR_WIDTH - 1 : 0] ic1_fy_fx;
@@ -156,13 +165,30 @@ logic [BANK_ADDR_WIDTH - 1 : 0] oy1_ox1;
 
 
 /*  assignment for counter en signals  */
-assign en_ic1_fy_fx_counter    = (oy0_ox0 == config_OY0_OX0);
+assign en_ic1_fy_fx_counter    = oy0_ox0_last_cycle;
 assign en_oy1_ox1_counter      = oc1_iter_done;
+
 /*  assignment for iteration states   */
-assign last_oy1_ox1            = (oy1_ox1 == (config_OY1_OX1-1));
+// oy0_ox0 related
+assign oy0_ox0_first_cycle = (oy0_ox0 == 1);
+assign oy0_ox0_not_zero_cycle = (oy0_ox0 > 0);
+assign oy0_ox0_last_cycle = (oy0_ox0 == config_OY0_OX0);
+assign oy0_ox0_not_last2_cycle = (oy0_ox0 < (config_OY0_OX0 - 1));
+
+//ic1_fy_fx related
 assign ic1_fy_fx_iter_done     = (ic1_fy_fx == config_IC1_IY0_IX0) && en_ic1_fy_fx_counter;
+assign ic1_fy_fx_not_last_cycle = (ic1_fy_fx < config_IC1_IY0_IX0);
+assign ic1_fy_fx_not_zero_cycle = (ic1_fy_fx > 0);
+assign ic1_fy_fx_not_zero_or_last_cycle = ic1_fy_fx_not_zero_cycle && ic1_fy_fx_not_last_cycle;
+
+// oc1_related
 assign oc1_iter_done           = (oc1 == (config_OC1-1)) && en_oc1_counter;
+
+// oy1_ox1 related
+assign last_oy1_ox1            = (oy1_ox1 == (config_OY1_OX1-1));
 assign first_oy1_ox1_iter_done = (oy1_ox1 > 0);
+
+
 
 /* assignment for ifmap_write_bank_counter   */
 assign all_ifmap_write_bank_done = (ifmap_write_bank_count == config_OY1_OX1);
@@ -184,6 +210,57 @@ assign config_OY1_OX1          = config_OY1 * config_OY1;
 assign config_data_weight_read = config_OC1 * config_IC1 * config_FY * config_FY * IC0;
 assign config_OY0_OX0          = config_OY0 * config_OY0;
 assign config_OY1_OX1_OC1      = config_OY1 * config_OY1 * config_OC1;
+
+
+
+/*    logic for mac_more module     */
+// for en_weight00
+always @ (*) begin
+  if (en_mac_op)
+    en_weight00 <= ic1_fy_fx_not_last_cycle && oy0_ox0_first_cycle;
+  else
+    en_weight00 <= 1'b0;
+end
+
+// for weight_fifo_enq
+always @ (*) begin
+  if (en_mac_op)
+    weight_fifo_enq<= (oy0_ox0_not_zero_cycle && (oy0_ox0 <= IC0));
+  else
+    weight_fifo_enq<= 1'b0;
+end
+
+// for ifmap_fifo_enq
+always @ (*) begin
+  if (en_mac_op)
+    ifmap_fifo_enq <= ic1_fy_fx_not_last_cycle && (~oy0_ox0_first_cycle);
+  else
+    ifmap_fifo_enq <= 1'b0;
+end
+
+// for accum_in_fifo_enq
+always @ (*) begin
+  if (en_mac_op)
+    accum_in_fifo_enq <= ic1_fy_fx_not_zero_or_last_cycle && (~oy0_ox0_first_cycle);
+  else
+    accum_in_fifo_enq <= 1'b0;
+end
+
+// for accum_out_fifo_enq
+always @ (*) begin
+  if (en_mac_op) begin
+    if (oy0_ox0 <= IC0)
+      accum_out_fifo_enq <= ic1_fy_fx_not_zero_cycle;
+    else if (oy0_ox0 > (IC0 + 1))
+      accum_out_fifo_enq <= ic1_fy_fx_not_last_cycle;
+    else
+      accum_out_fifo_enq <= 1'b0;
+  end
+  else
+    accum_out_fifo_enq <= 1'b0;
+end
+
+
 
 
 /*  load config data  */
