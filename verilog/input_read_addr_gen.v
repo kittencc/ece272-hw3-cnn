@@ -10,18 +10,20 @@ module input_read_addr_gen
   parameter NUM_PARAMS = 8,
   parameter BANK_ADDR_WIDTH = 8
 )(
-  input clk,
-  input rst_n,
-  input addr_enable,
-  output [BANK_ADDR_WIDTH - 1 : 0] addr,
-  input [PARAM_WID*NUM_PARAMS - 1 : 0] config_data
+  input  logic clk,
+  input  logic rst_n,
+  input  logic addr_enable,
+  output logic [BANK_ADDR_WIDTH - 1 : 0]      addr,
+  input  logic [PARAM_WID*NUM_PARAMS - 1 : 0] config_data
 );
 
 // local signals
   logic [PARAM_WID - 1 : 0] config_OX0, config_OY0, config_FX, config_FY,
     config_STRIDE, config_IX0, config_IY0, config_IC1;
-  logic [PARAM_WID - 1 : 0] ox0, oy0, fx, fy, ic1;
-  logic [PARAM_WID - 1 : 0] ix0, iy0, addrc;
+
+  logic [PARAM_WID - 1 : 0]       ox0, oy0, fx, fy, ic1;
+  logic [PARAM_WID - 1 : 0]       ix0, iy0;
+  logic [BANK_ADDR_WIDTH - 1 : 0] addrc;
 
 
   assign {config_OX0, config_OY0, config_FX, config_FY,
@@ -30,7 +32,8 @@ module input_read_addr_gen
   assign iy0 = config_STRIDE * oy0 + fy;
   assign addrc = ic1 * config_IX0 * config_IY0 + iy0 * config_IX0 + ix0;
 
-  assign addr = addrc[BANK_ADDR_WIDTH - 1 : 0];
+//  assign addr = addrc[BANK_ADDR_WIDTH - 1 : 0];
+  assign addr = addrc;
 
 
 

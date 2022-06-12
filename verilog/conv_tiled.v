@@ -11,6 +11,8 @@
 //      - connect main_FSM
 //      - add logic for counter iter states
 //      - add logic for mac_more module
+// Updated on: 2022-06-11:
+//      - connect ifmap/weight_read_addr_gen, accum_write/read_addr_gen  modules
 
 module conv_tiled
 #(
@@ -74,13 +76,13 @@ logic [BANK_ADDR_WIDTH - 1 : 0] config_OY1_OX1_OC1;
 
 /*    for double buffers   */
 // for the ifmap_double_buffer
-logic ifmap_double_buffer_ren;
+logic                           ifmap_double_buffer_ren;
 logic [BANK_ADDR_WIDTH - 1 : 0] ifmap_double_buffer_raddr;
 logic [16*IC0 - 1 : 0]          ifmap_double_buffer_rdata;
 logic [BANK_ADDR_WIDTH - 1 : 0] ifmap_write_bank_count;
 
 // for the weight_double_buffer
-logic weight_double_buffer_ren;
+logic                           weight_double_buffer_ren;
 logic [BANK_ADDR_WIDTH - 1 : 0] weight_double_buffer_raddr;
 logic [16*OC0 - 1 : 0]          weight_double_buffer_rdata;
 logic [ BANK_ADDR_WIDTH- 1 : 0] weight_write_bank_count;
@@ -153,7 +155,7 @@ logic oy0_ox0_not_last2_cycle;
 
 logic [BANK_ADDR_WIDTH - 1 : 0] oy0_ox0;   // the current iteration for oy0_ox0
 logic [BANK_ADDR_WIDTH - 1 : 0] ic1_fy_fx;
-logic [PARAM_WID- 1 : 0]        oc1;
+logic [PARAM_WID - 1 : 0]        oc1;
 logic [BANK_ADDR_WIDTH - 1 : 0] oy1_ox1;
 
 
@@ -441,6 +443,72 @@ main_FSM main_FSM_inst
   .en_oc1_counter(en_oc1_counter),
   .en_mac_op(en_mac_op),
   .rst_n_mac(rst_n_mac)
+);
+
+
+
+
+/* connect ifmap_double_buffer read_addr_gen module */
+input_read_addr_gen
+#(
+  .PARAM_WID(PARAM_WID),
+  .NUM_PARAMS(8),
+  .BANK_ADDR_WIDTH(BANK_ADDR_WIDTH)
+)
+ifmap_read_addr_gen_inst
+(
+  .clk(clk),
+  .rst_n(rst_n),
+  .addr_enable(ifmap_double_buffer_ren),
+  .addr(ifmap_double_buffer_raddr),
+  .config_data(config_data_ifmap_read)
+);
+
+
+/* connect weight_double_buffer read_addr_gen module */
+weight_addr_gen
+# (
+  .BANK_ADDR_WIDTH(BANK_ADDR_WIDTH)
+)
+weight_read_addr_gen_inst
+(
+  .clk(clk),
+  .rst_n(rst_n),
+  .addr_enable(weight_double_buffer_ren),
+  .config_data(config_data_weight_read),
+  .addr(weight_double_buffer_raddr),
+  .writing_last_data(weight_db_reading_last_data)
+);
+
+
+/* connect accum_read_addr_gen module */
+accum_addr_gen
+# (
+  .BANK_ADDR_WIDTH(BANK_ADDR_WIDTH)
+)
+accum_read_addr_gen_inst
+(
+  .clk(clk),
+  .rst_n(rst_n),
+  .addr_enable(accum_double_buffer_ren),
+  .config_data(config_OY0_OX0),
+  .addr(accum_double_buffer_raddr),
+  .writing_last_data(accum_db_reading_last_data)
+);
+
+/* connect accum_write_addr_gen module */
+accum_addr_gen
+# (
+  .BANK_ADDR_WIDTH(BANK_ADDR_WIDTH)
+)
+accum_write_addr_gen_inst
+(
+  .clk(clk),
+  .rst_n(rst_n),
+  .addr_enable(accum_double_buffer_wen),
+  .config_data(config_OY0_OX0),
+  .addr(accum_double_buffer_waddr),
+  .writing_last_data(accum_db_writing_last_data)
 );
 
 
