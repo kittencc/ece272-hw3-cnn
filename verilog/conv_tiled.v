@@ -13,6 +13,8 @@
 //      - add logic for mac_more module
 // Updated on: 2022-06-11:
 //      - connect ifmap/weight_read_addr_gen, accum_write/read_addr_gen  modules
+//      - add logic for ren/wen signals for
+//      ifmap/weight/accum_double_buffer 
 
 module conv_tiled
 #(
@@ -261,6 +263,45 @@ always @ (*) begin
   else
     accum_out_fifo_enq <= 1'b0;
 end
+
+
+
+
+/* logic for ifmap_double_buffer module*/
+always @ (*) begin
+  if (en_mac_op)
+      ifmap_double_buffer_ren <= ic1_fy_fx_not_last_cycle && oy0_ox0_not_zero_cycle;
+  else
+      ifmap_double_buffer_ren <= 1'b0;
+end
+
+
+/* logic for weight_double_buffer module*/
+always @ (*) begin
+  if (en_mac_op)
+      weight_double_buffer_ren <= ic1_fy_fx_not_last_cycle && (oy0_ox0 < IC0);
+  else
+      weight_double_buffer_ren <= 1'b0;
+end
+
+
+/* logic for weight_double_buffer module*/
+// ren
+always @ (*) begin
+  if (en_mac_op)
+      accum_double_buffer_ren <= ic1_fy_fx_not_zero_or_last_cycle && oy0_ox0_not_zero_cycle;
+  else
+      accum_double_buffer_ren <= 1'b0;
+end
+
+// wen
+always @ (*) begin
+  if (en_mac_op)
+      accum_double_buffer_wen <= (ic1_fy_fx_not_last_cycle && oy0_ox0_last_cycle) || (ic1_fy_fx_not_zero_cycle && oy0_ox0_not_last2_cycle);
+  else
+      accum_double_buffer_wen <= 1'b0;
+end
+
 
 
 
