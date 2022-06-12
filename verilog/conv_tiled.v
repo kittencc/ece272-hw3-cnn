@@ -14,7 +14,8 @@
 // Updated on: 2022-06-11:
 //      - connect ifmap/weight_read_addr_gen, accum_write/read_addr_gen  modules
 //      - add logic for ren/wen signals for
-//      ifmap/weight/accum_double_buffer 
+//      ifmap/weight/accum_double_buffer
+//      - add logic to load config_data
 
 module conv_tiled
 #(
@@ -309,11 +310,18 @@ end
 /*  load config data  */
 always @ (posedge clk) begin
   if (~rst_n)
-    {config_OY1, config_OC1, config_IC1, config_FY, config_OY0, config_STRIDE} <= {PARAM_NUM * PARAM_WID {1'b0}};
-  else if (config_en)
+    {config_OY1, config_OC1, config_IC1, config_FY, config_OY0, config_STRIDE} <= { PARAM_NUM* PARAM_WID {1'b0}};
+  else if (layer_params_rdy && layer_params_vld )
     {config_OY1, config_OC1, config_IC1, config_FY, config_OY0, config_STRIDE} <= layer_params_dat;
 end
 
+/* logic for config_done  flag */
+always @ (posedge clk) begin
+  if (~rst_n)
+    config_done <= 1'b0;
+  else if (layer_params_rdy && layer_params_vld )
+    config_done <= 1'b1;
+end
 
 
 
