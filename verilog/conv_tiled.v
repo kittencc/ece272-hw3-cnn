@@ -319,7 +319,7 @@ end
 always @ (posedge clk) begin
   if (~rst_n)
     config_done <= 1'b0;
-  else if (layer_params_rdy && layer_params_vld )
+  else if (layer_params_rdy && layer_params_vld )   // _vld signal only stays high for 1 cycle
     config_done <= 1'b1;
 end
 
