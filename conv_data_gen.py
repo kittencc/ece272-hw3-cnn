@@ -6,6 +6,7 @@
 # Author: Cheryl (Yingqiu) Cao
 # Date: 2022-07-04
 # Updated on: 2022-07-10
+# Updated on: 2022-07-24
 
 import os
 import numpy
@@ -112,6 +113,44 @@ print("IC0 = {}".format(IC0))
 
 
 #################################################
+###   saves ifmap data in .mem for tesebench    #####
+#################################################
+# clean up pre-existing data failes
+if os.path.exists("data/layer4_ifmap.mem"):
+  os.remove("data/layer4_ifmap.mem")
+# saves the ifmap data in "layer4_ifmap.txt"
+f = open("data/layer4_ifmap.mem", "a")
+
+# ordering ifmap data
+# each ifmap bank dimension [ic1, iy0, ix0] chained over ic0
+# a total of OY1 * OX1 = 1 bank
+for oy1 in range(OY1):
+  for ox1 in range(OX1):
+#    for oc1 in range(OC1):  // OC1 does not affect ifmap indexing
+    for ic1 in range(IC1):
+      for iy0 in range(IY0):
+        for ix0 in range(IX0):
+          for ic0 in range(IC0):     # OC0 does not affect ifmap indexng
+
+            ix = ix0 + ox1 * OX0 * Stride     # IMPORTANT!
+            iy = iy0 + oy1 * OY0 * Stride
+            ic = ic0 + ic1 * IC0
+            ifmap_data = ifmap[ix][iy][ic]
+            # {0:08x}
+            # first 0 is the index of the actual value getting loaded for
+            # formatting.
+            # 08x, left fill with zeros, data is 8 in width, each digit is
+            # in hex form
+            f.write("{0:08x}\n".format(ifmap_data))
+
+f.close()
+
+
+
+
+
+
+#################################################
 ###   orders weights data in tilting order   #####
 #################################################
 # clean up pre-existing data failes
@@ -143,7 +182,40 @@ print("FX = {}".format(FX))
 
 
 #################################################
-###   orders ifmap data in tilting order    #####
+###   saves weights data in .mem for tesebench #####
+#################################################
+# clean up pre-existing data failes
+if os.path.exists("data/layer4_weights.mem"):
+  os.remove("data/layer4_weights.mem")
+# saves the ifmap data in "layer4_.mem"
+f = open("data/layer4_weights.mem", "a")
+
+# ordering weight data
+# each weight bank dimension [oc1, ic1, fy, fx, ic0] chained over oc0
+# a total of 1 bank 
+for oc1 in range(OC1):
+  for ic1 in range(IC1):
+    for fy in range(FY):
+      for fx in range(FX):
+        for ic0 in range(IC0):
+          for oc0 in range(OC0):
+            
+            ic = ic1 * IC0 + ic0
+            oc = oc1 * OC1 + oc0
+            weight_data = weight[fx][fy][ic][oc]
+            # {0:08x}
+            # first 0 is the index of the actual value getting loaded for
+            # formatting.
+            # 08x, left fill with zeros, data is 8 in width, each digit is
+            # in hex form
+            f.write("{0:08x}\n".format(weight_data))
+
+f.close()
+
+
+
+#################################################
+###   orders ofmap data in tilting order    #####
 #################################################
 # clean up pre-existing data failes
 if os.path.exists("data/layer4_ofmap.txt"):
