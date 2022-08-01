@@ -294,7 +294,7 @@ always @ (*) begin
 end
 
 
-/* logic for weight_double_buffer module*/
+/* logic for accum_double_buffer module*/
 // ren
 always @ (*) begin
   if (en_mac_op)
@@ -306,7 +306,7 @@ end
 // wen
 always @ (*) begin
   if (en_mac_op)
-      accum_double_buffer_wen <= (ic1_fy_fx_not_last_cycle && oy0_ox0_last_cycle) || (ic1_fy_fx_not_zero_cycle && oy0_ox0_not_last2_cycle);
+      accum_double_buffer_wen <= (ic1_fy_fx_not_last_cycle && (oy0_ox0 > (IC0+OC0))) || (ic1_fy_fx_not_zero_cycle && (oy0_ox0 < (IC0+OC0)));
   else
       accum_double_buffer_wen <= 1'b0;
 end
