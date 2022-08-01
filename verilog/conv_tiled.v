@@ -252,10 +252,12 @@ end
 // for accum_in_fifo_enq
 always @ (*) begin
   if (en_mac_op)
-    accum_in_fifo_enq <= ic1_fy_fx_not_zero_or_last_cycle && (~oy0_ox0_first_cycle);
+    accum_in_fifo_enq  <= (ic1_fy_fx_not_last_cycle && ic1_fy_fx_not_zero_cycle && (oy0_ox0 >=2)) || ((ic1_fy_fx > 1)  && (oy0_ox0 == 0));
   else
-    accum_in_fifo_enq <= 1'b0;
+    accum_in_fifo_enq  <= 1'b0;
 end
+
+
 
 // for accum_out_fifo_enq
 always @ (*) begin
