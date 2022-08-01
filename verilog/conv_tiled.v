@@ -74,6 +74,9 @@ logic [BANK_ADDR_WIDTH - 1 : 0] config_data_weight_read;
 logic [BANK_ADDR_WIDTH - 1 : 0] config_OY0_OX0;
 // for read_bank_counter in ofmap_output_controleer
 logic [BANK_ADDR_WIDTH - 1 : 0] config_OY1_OX1_OC1;
+// for mac_more iteration
+logic [BANK_ADDR_WIDTH - 1 : 0] config_IC1_FY_FX;
+
 
 
 
@@ -181,8 +184,8 @@ assign oy0_ox0_last_cycle = (oy0_ox0 == config_OY0_OX0);
 assign oy0_ox0_not_last2_cycle = (oy0_ox0 < (config_OY0_OX0 - 1));
 
 //ic1_fy_fx related
-assign ic1_fy_fx_iter_done     = (ic1_fy_fx == config_IC1_IY0_IX0) && en_ic1_fy_fx_counter;
-assign ic1_fy_fx_not_last_cycle = (ic1_fy_fx < config_IC1_IY0_IX0);
+assign ic1_fy_fx_iter_done     = (ic1_fy_fx == config_IC1_FY_FX) && en_ic1_fy_fx_counter;
+assign ic1_fy_fx_not_last_cycle = (ic1_fy_fx < config_IC1_FY_FX);
 assign ic1_fy_fx_not_zero_cycle = (ic1_fy_fx > 0);
 assign ic1_fy_fx_not_zero_or_last_cycle = ic1_fy_fx_not_zero_cycle && ic1_fy_fx_not_last_cycle;
 
@@ -215,6 +218,7 @@ assign config_OY1_OX1          = config_OY1 * config_OY1;
 assign config_data_weight_read = config_OC1 * config_IC1 * config_FY * config_FY * IC0;
 assign config_OY0_OX0          = config_OY0 * config_OY0;
 assign config_OY1_OX1_OC1      = config_OY1 * config_OY1 * config_OC1;
+assign config_IC1_FY_FX        = config_IC1 * config_FY * config_FY;
 
 
 
@@ -591,7 +595,7 @@ ic1_fy_fx_counter_inst
   .rst_n(rst_n),
   .en(en_ic1_fy_fx_counter),
   .count(ic1_fy_fx),
-  .config_MAX_COUNT(config_IC1_IY0_IX0+1)
+  .config_MAX_COUNT(config_IC1_FY_FX + 1)
 );
 
 
