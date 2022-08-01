@@ -141,7 +141,7 @@ for oy1 in range(OY1):
             # formatting.
             # 08x, left fill with zeros, data is 8 in width, each digit is
             # in hex form
-            f.write("{0:08x}\n".format(ifmap_data))
+            f.write("{0:x}\n".format(ifmap_data))
 
 f.close()
 
@@ -208,7 +208,7 @@ for oc1 in range(OC1):
             # formatting.
             # 08x, left fill with zeros, data is 8 in width, each digit is
             # in hex form
-            f.write("{0:08x}\n".format(weight_data))
+            f.write("{0:x}\n".format(weight_data))
 
 f.close()
 

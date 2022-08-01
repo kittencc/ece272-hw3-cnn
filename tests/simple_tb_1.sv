@@ -67,6 +67,7 @@ module simple_tb_1;
   logic layer_params_vld;
 
   // saves the full data matrices
+  logic [ PARAM_NUM * PARAM_WID - 1 : 0] params;  // {OY1, OC1, IC1, FY, OY0, stride}
   logic [15:0] ifmap_dat_full   [IX * IY * IC - 1 : 0];
   logic [15:0] weights_dat_full [FX * FY * IC * OC - 1 : 0];
   logic [31:0] ofmap_dat_full   [OX * OY * OC - 1 : 0];
@@ -81,7 +82,9 @@ module simple_tb_1;
 always #10 clk = ~clk;  // clk cycle is 20
 
 
-
+/* layer params assignment */
+assign params = {OY1[PARAM_WID - 1 : 0], OC1[PARAM_WID - 1 : 0], IC1[PARAM_WID - 1 : 0], FY[PARAM_WID - 1 : 0], OY0[PARAM_WID - 1 : 0],
+Stride[PARAM_WID - 1 : 0]};
 
 /*          connect the dut            */
 conv_tiled
@@ -112,7 +115,12 @@ dut
 );
 
 
-
+// local variables only for the initial block//
+  // index to read the layer_param/ifmap/weight array data
+  logic params_write;  // declares outside
+  int ifmap_idx;
+  int weights_idx;
+  int ofmap_idx;
 
 initial begin
 
@@ -120,11 +128,6 @@ initial begin
   $readmemh("data/layer4_ifmap.mem", ifmap_dat_full);
   $readmemh("data/layer4_weights.mem", weights_dat_full);
 
-  // index to read the layer_param/ifmap/weight array data
-  logic params_read;
-  int ifmap_idx;
-  int weights_idx;
-  int ofmap_idx;
 
   // initialize the index to 0
   ifmap_idx = 0;
@@ -192,8 +195,8 @@ end
 // saves waveform to dsfb for verdi to open
 initial begin
   $fsdbDumpfile("dump.fsdb");
-  $fsdbDumpvars(0, ofmap_PISO_tb);
-  $fsdbDumpMDA(0, ofmap_PISO_tb);
+  $fsdbDumpvars(0, simple_tb_1);
+  $fsdbDumpMDA(0, simple_tb_1);
   #10000;
   $finish;
 end
