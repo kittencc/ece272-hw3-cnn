@@ -234,7 +234,7 @@ end
 // for weight_fifo_enq
 always @ (*) begin
   if (en_mac_op)
-    weight_fifo_enq<= (oy0_ox0_not_zero_cycle && (oy0_ox0 <= IC0));
+    weight_fifo_enq<= (ic1_fy_fx_not_last_cycle && oy0_ox0_not_zero_cycle && (oy0_ox0 <= IC0));
   else
     weight_fifo_enq<= 1'b0;
 end
