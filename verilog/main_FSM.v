@@ -1,6 +1,9 @@
 // Description: main finite-sate-machine for the tiled CNN accelerator
 // Author: Cheryl (Yingqiu) Cao
 // Date: 2022-05-30
+// Updated on: 2022-07-31
+//    - added "nop" state before "mac_on" state to fix issue reading 0th
+//    weight data from the weight_double_buffer
 
 
 module main_FSM(
@@ -43,6 +46,7 @@ localparam WAIT1 = 4'b0110;
 localparam OFMAP_DOUBLE_BUFFER_SWITCH = 4'b0111;
 localparam OUTPUT_OFMAP = 4'b1000;
 localparam END_WAIT = 4'b1001;
+localparam NOP = 4'b1010;
 
 
 // local signals
@@ -82,9 +86,11 @@ always @ ( * ) begin
         next_state <= WAIT2;
     IFMAP_DOUBLE_BUFFER_SWITCH:
       if (all_ifmap_write_bank_done)
-        next_state <= MAC_ON;
+        next_state <= NOP;
       else
         next_state <= WRITE_IFMAP;
+    NOP:
+      next_state <= MAC_ON;
     WRITE_IFMAP:
       next_state <= MAC_ON;
     MAC_ON:
@@ -164,6 +170,18 @@ always @ ( * ) begin
         en_mac_op                  <= 1'b0;
         rst_n_mac                  <= 1'b1;
       end
+    NOP:
+    begin
+        layer_params_rdy           <= 1'b0;
+        ifmap_ready_to_switch      <= 1'b0;
+        ifmap_start_new_write_bank <= 1'b0;
+        ofmap_ready_to_switch      <= 1'b0;
+        ofmap_start_new_read_bank  <= 1'b0;
+        en_oy0_ox0_counter         <= 1'b0;
+        en_oc1_counter             <= 1'b0;
+        en_mac_op                  <= 1'b0;
+        rst_n_mac                  <= 1'b1;
+    end
     WRITE_IFMAP:
       begin
         layer_params_rdy           <= 1'b0;
