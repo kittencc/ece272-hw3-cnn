@@ -15,17 +15,17 @@ from numpy import random
 # cnn parameters
 OY0 = 3
 OX0 = 3
-OC0 = 2
-IC0 = 2
+OC0 = 4
+IC0 = 4
 Stride = 1
 
 # parameters on: input data dimensions
-OY = 3
-OX = 3
-OC = 2
-IC = 2
-FY = 2
-FX = 2
+OY = 12
+OX = 12
+OC = 16
+IC = 8
+FY = 3
+FX = 3
 
 # derived parameters
 OY1 = OY / OY0
@@ -60,6 +60,8 @@ weight = random.randint( -10, 10, size = (FX, FY, IC, OC))
 ofmap = numpy.zeros((OX, OY, OC), dtype = int)
 # print(ofmap)
 
+
+
 # computes ofmap( ox, oy, oc)
 for oy1 in range(OY1):
   for ox1 in range(OX1):
@@ -92,10 +94,10 @@ for oy1 in range(OY1):
 ###   orders ifmap data in tilting order    #####
 #################################################
 # clean up pre-existing data failes
-if os.path.exists("data/layer5_ifmap.txt"):
-  os.remove("data/layer5_ifmap.txt")
+if os.path.exists("data/layer6_ifmap.txt"):
+  os.remove("data/layer6_ifmap.txt")
 # saves the ifmap data in "layer5_ifmap.txt"
-f = open("data/layer5_ifmap.txt", "a")
+f = open("data/layer6_ifmap.txt", "a")
 
 # ordering ifmap data
 # each ifmap bank dimension [ic1, iy0, ix0] chained over ic0
@@ -124,10 +126,10 @@ print("IC0 = {}".format(IC0))
 ###   saves ifmap data in .mem for tesebench    #####
 #################################################
 # clean up pre-existing data failes
-if os.path.exists("data/layer5_ifmap.mem"):
-  os.remove("data/layer5_ifmap.mem")
-# saves the ifmap data in "layer5_ifmap.txt"
-f = open("data/layer5_ifmap.mem", "a")
+if os.path.exists("data/layer6_ifmap.mem"):
+  os.remove("data/layer6_ifmap.mem")
+# saves the ifmap data in "layer6_ifmap.txt"
+f = open("data/layer6_ifmap.mem", "a")
 
 # ordering ifmap data
 # each ifmap bank dimension [ic1, iy0, ix0] chained over ic0
@@ -169,10 +171,10 @@ f.close()
 ###   orders weights data in tilting order   #####
 #################################################
 # clean up pre-existing data failes
-if os.path.exists("data/layer5_weights.txt"):
-  os.remove("data/layer5_weights.txt")
-# saves the ifmap data in "layer5_ifmap.txt"
-f = open("data/layer5_weights.txt", "a")
+if os.path.exists("data/layer6_weights.txt"):
+  os.remove("data/layer6_weights.txt")
+# saves the ifmap data in "layer6_ifmap.txt"
+f = open("data/layer6_weights.txt", "a")
 
 # ordering weight data
 # each weight bank dimension [oc1, ic1, fy, fx, ic0] chained over oc0
@@ -200,10 +202,10 @@ print("FX = {}".format(FX))
 ###   saves weights data in .mem for tesebench #####
 #################################################
 # clean up pre-existing data failes
-if os.path.exists("data/layer5_weights.mem"):
-  os.remove("data/layer5_weights.mem")
-# saves the ifmap data in "layer5_.mem"
-f = open("data/layer5_weights.mem", "a")
+if os.path.exists("data/layer6_weights.mem"):
+  os.remove("data/layer6_weights.mem")
+# saves the ifmap data in "layer6_.mem"
+f = open("data/layer6_weights.mem", "a")
 
 # ordering weight data
 # each weight bank dimension [oc1, ic1, fy, fx, ic0] chained over oc0
@@ -233,10 +235,10 @@ f.close()
 ###   orders ofmap data in tilting order    #####
 #################################################
 # clean up pre-existing data failes
-if os.path.exists("data/layer5_ofmap.txt"):
-  os.remove("data/layer5_ofmap.txt")
-# saves the ifmap data in "layer5_ifmap.txt"
-f = open("data/layer5_ofmap.txt", "a")
+if os.path.exists("data/layer6_ofmap.txt"):
+  os.remove("data/layer6_ofmap.txt")
+# saves the ifmap data in "layer6_ifmap.txt"
+f = open("data/layer6_ofmap.txt", "a")
 
 # ordering ofmap data
 # each ofmap bank dimension [oc1, oy0, ox0, oc0] 
