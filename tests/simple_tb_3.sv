@@ -11,7 +11,9 @@ module simple_tb_3;
   localparam PARAM_NUM = 6;
   localparam PARAM_WID = 16;
   localparam BANK_ADDR_WIDTH = 32;       // width needed to save IC1*IX0*IY0, OY1_OX1
-  localparam BUFFER_MEM_DEPTH = 256;     // capacity of the memory, larger than IC1*Ix0*IY0
+  localparam BUFFER_MEM_DEPTH = 512;     // capacity of the memory, larger
+ //  than IC1*Ix0*IY0 (ifmap), FX*FY*IC*OC1 (weight double buffer), and
+ //  OX0*OY0 (ofmap)
 
 //  cnn parameters
   localparam OY0 = 3;
@@ -37,6 +39,12 @@ module simple_tb_3;
   localparam IY = (OY - 1) * Stride + FY;
   localparam IX0 = (OX0 - 1) * Stride + FX;
   localparam IY0 = (OY0 - 1) * Stride + FY;
+
+  // array size for ifmap/weight/ofmap, when flattening the
+  // multi-dimensional array into a vector
+  localparam IFMAP_SIZE =  OY1 * OX1* IC1 * IY0 * IX0 * IC0;
+  localparam WEIGHT_SIZE = FX * FY * IC * OC;
+  localparam OFMAP_SIZE = OX * OY * OC;
 
   // local parameters --
 
@@ -68,9 +76,9 @@ module simple_tb_3;
 
   // saves the full data matrices
   logic [ PARAM_NUM * PARAM_WID - 1 : 0] params;  // {OY1, OC1, IC1, FY, OY0, stride}
-  logic [15:0] ifmap_dat_full   [IX * IY * IC - 1 : 0];
-  logic [15:0] weights_dat_full [FX * FY * IC * OC - 1 : 0];
-  logic [31:0] ofmap_dat_full   [OX * OY * OC - 1 : 0];
+  logic [15:0] ifmap_dat_full   [IFMAP_SIZE - 1 : 0];
+  logic [15:0] weights_dat_full [WEIGHT_SIZE - 1 : 0];
+  logic [31:0] ofmap_dat_full   [OFMAP_SIZE - 1 : 0];
 
 // local signals --
 
@@ -145,12 +153,12 @@ initial begin
   ofmap_rdy = 1;
 
 
-  while(ifmap_idx < IX * IY * IC || weights_idx < FX * FY * IC * OC ||
-  params_write == 0 || ofmap_idx < OX * OY * OC) begin
+  while(ifmap_idx < IFMAP_SIZE || weights_idx < WEIGHT_SIZE ||
+  params_write == 0 || ofmap_idx < OFMAP_SIZE) begin
 
     # 20   // let 1 clk cycle pass
 
-    if ((ifmap_idx < IX * IY * IC) && ifmap_rdy ) begin
+    if ((ifmap_idx < IFMAP_SIZE) && ifmap_rdy ) begin
       ifmap_dat = ifmap_dat_full[ifmap_idx];
       ifmap_vld = 1;
       ifmap_idx = ifmap_idx + 1;
@@ -159,7 +167,7 @@ initial begin
       ifmap_vld = 0;
     end
 
-    if ((weights_idx < FX * FY * IC * OC) && weights_rdy) begin
+    if ((weights_idx < WEIGHT_SIZE) && weights_rdy) begin
       weights_dat = weights_dat_full[weights_idx];
       weights_vld = 1;
       weights_idx = weights_idx + 1;
@@ -168,7 +176,7 @@ initial begin
       weights_vld = 0;
     end
 
-    if(ofmap_idx < OX * OY * OC && ofmap_vld == 1) begin
+    if(ofmap_idx < OFMAP_SIZE && ofmap_vld == 1) begin
       ofmap_dat_full[ofmap_idx] = ofmap_dat;
       ofmap_rdy = 1;
       ofmap_idx = ofmap_idx + 1;
@@ -197,7 +205,7 @@ initial begin
   $fsdbDumpfile("dump.fsdb");
   $fsdbDumpvars(0, simple_tb_3);
   $fsdbDumpMDA(0, simple_tb_3);
-  #100000;
+  #500000;
   $finish;
 end
 
