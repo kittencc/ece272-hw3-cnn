@@ -1,2 +1,2 @@
-# EE272-HW3
+# parameterized cnn accelerator RTL design
 
